@@ -1,0 +1,28 @@
+services:
+  market-service:
+    image: market-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    ports:
+      - "${PORT}:8000"
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      CORE_DB_NAME: ${DB_NAME}
+      TIMESCALEDB_TELEMETRY: "off"
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+      - ./initdb.sh:/docker-entrypoint-initdb.d/init-database.sh
+    command: [ "postgres", "-c", "log_statement=all" ]
+    restart: unless-stopped

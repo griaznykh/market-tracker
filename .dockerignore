@@ -1,0 +1,7 @@
+**/.git
+**/.gitignore
+**/.gitattributes
+
+# project-specific stuff
+Makefile
+**/.env*
