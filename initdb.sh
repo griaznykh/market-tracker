@@ -11,6 +11,6 @@ set -eo pipefail
 ##############################################################
 
 psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" --dbname "postgres" <<-EOSQL
-    CREATE DATABASE ${DB_NAME};
-    GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${POSTGRES_USER};
+    CREATE DATABASE ${CORE_DB_NAME};
+    GRANT ALL PRIVILEGES ON DATABASE ${CORE_DB_NAME} TO ${POSTGRES_USER};
 EOSQL

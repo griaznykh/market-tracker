@@ -1,16 +1,17 @@
 services:
-  market-service:
-    image: market-service
-    build:
-      context: .
-      dockerfile: Dockerfile
-    env_file:
-      - ./.env
-    ports:
-      - "${PORT}:8000"
-    restart: unless-stopped
-    depends_on:
-      - postgres
+  # FOR LOCAL DEVELOPMENT ONLY
+  # market-service:
+  #   image: market-service
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - ./.env
+  #   ports:
+  #     - "${PORT}:8000"
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - postgres
     
   postgres:
     image: timescale/timescaledb:latest-pg16
