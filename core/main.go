@@ -5,15 +5,18 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"lib/signal"
 	"log"
 	config "market-service/internal/configs"
-	"market-service/internal/lib/signal"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/tern/v2/migrate"
 	"github.com/joho/godotenv"
 )
+
+//go:embed migrations/*.sql
+var migrations embed.FS
 
 func init() {
 	if err := godotenv.Load(); err != nil {
@@ -48,9 +51,6 @@ func main() {
 		return
 	}
 }
-
-//go:embed migrations/*.sql
-var migrations embed.FS
 
 func migrateDatabase(ctx context.Context, conn *pgx.Conn) error {
 	migrator, err := migrate.NewMigrator(ctx, conn, "schema_version")

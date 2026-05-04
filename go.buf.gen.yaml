@@ -1,0 +1,34 @@
+version: v2
+clean: true
+plugins:
+  - local: protoc-gen-go
+    out: lib/schema/gen/go
+    opt:
+      - paths=source_relative
+
+  - local: protoc-gen-go-grpc
+    out: lib/schema/gen/go
+    opt:
+      - paths=source_relative
+
+  - local: protoc-gen-grpc-gateway
+    out: lib/schema/gen/go
+    opt:
+      - paths=source_relative
+
+  - local: protoc-gen-openapiv2
+    out: lib/schema/gen/openapiv2
+    opt:
+      - output_format=json
+      - allow_merge=true
+      - merge_file_name=production
+      - openapi_naming_strategy=simple
+      - enable_rpc_deprecation=true
+      - use_go_templates=true
+      - disable_default_errors=false
+      - disable_service_tags=true
+      - simple_operation_ids=true
+    strategy: all
+
+inputs:
+  - directory: proto

@@ -1,0 +1,11 @@
+version: v2
+modules:
+  - path: proto/googleapis
+  - path: proto/protovalidate
+  - path: proto/grpc-gateway
+  - path: proto/market-tracker
+lint:
+  ignore:
+    - proto/googleapis
+    - proto/protovalidate
+    - proto/grpc-gateway

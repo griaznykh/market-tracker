@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package api.core.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "market-tracker/lib/schema/gen/go/api/core/v1;corev1";
+
+message User {
+  string id = 1;
+  string email = 2;
+  string password = 3;
+  google.protobuf.Timestamp created_at = 5;
+}
