@@ -31,4 +31,4 @@ plugins:
     strategy: all
 
 inputs:
-  - directory: proto
+  - directory: proto/market-tracker
