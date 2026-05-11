@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	CoreService_Register_FullMethodName       = "/api.core.v1.CoreService/Register"
 	CoreService_CreateApiToken_FullMethodName = "/api.core.v1.CoreService/CreateApiToken"
+	CoreService_GetCandles_FullMethodName     = "/api.core.v1.CoreService/GetCandles"
 )
 
 // CoreServiceClient is the client API for CoreService service.
@@ -29,6 +30,7 @@ const (
 type CoreServiceClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	CreateApiToken(ctx context.Context, in *CreateApiTokenRequest, opts ...grpc.CallOption) (*CreateApiTokenResponse, error)
+	GetCandles(ctx context.Context, in *GetCandlesRequest, opts ...grpc.CallOption) (*GetCandlesResponse, error)
 }
 
 type coreServiceClient struct {
@@ -59,12 +61,23 @@ func (c *coreServiceClient) CreateApiToken(ctx context.Context, in *CreateApiTok
 	return out, nil
 }
 
+func (c *coreServiceClient) GetCandles(ctx context.Context, in *GetCandlesRequest, opts ...grpc.CallOption) (*GetCandlesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCandlesResponse)
+	err := c.cc.Invoke(ctx, CoreService_GetCandles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CoreServiceServer is the server API for CoreService service.
 // All implementations must embed UnimplementedCoreServiceServer
 // for forward compatibility.
 type CoreServiceServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	CreateApiToken(context.Context, *CreateApiTokenRequest) (*CreateApiTokenResponse, error)
+	GetCandles(context.Context, *GetCandlesRequest) (*GetCandlesResponse, error)
 	mustEmbedUnimplementedCoreServiceServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedCoreServiceServer) Register(context.Context, *RegisterRequest
 }
 func (UnimplementedCoreServiceServer) CreateApiToken(context.Context, *CreateApiTokenRequest) (*CreateApiTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateApiToken not implemented")
+}
+func (UnimplementedCoreServiceServer) GetCandles(context.Context, *GetCandlesRequest) (*GetCandlesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCandles not implemented")
 }
 func (UnimplementedCoreServiceServer) mustEmbedUnimplementedCoreServiceServer() {}
 func (UnimplementedCoreServiceServer) testEmbeddedByValue()                     {}
@@ -138,6 +154,24 @@ func _CoreService_CreateApiToken_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CoreService_GetCandles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCandlesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoreServiceServer).GetCandles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CoreService_GetCandles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoreServiceServer).GetCandles(ctx, req.(*GetCandlesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CoreService_ServiceDesc is the grpc.ServiceDesc for CoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var CoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateApiToken",
 			Handler:    _CoreService_CreateApiToken_Handler,
+		},
+		{
+			MethodName: "GetCandles",
+			Handler:    _CoreService_GetCandles_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -7,8 +7,10 @@
 package corev1
 
 import (
+	_ "google.golang.org/genproto/googleapis/api"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -205,11 +207,123 @@ func (x *CreateApiTokenResponse) GetToken() *Token {
 	return nil
 }
 
+type GetCandlesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ticker        string                 `protobuf:"bytes,1,opt,name=ticker,proto3" json:"ticker,omitempty"`
+	Interval      string                 `protobuf:"bytes,2,opt,name=interval,proto3" json:"interval,omitempty"`
+	From          *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=from,proto3" json:"from,omitempty"`
+	To            *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=to,proto3" json:"to,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCandlesRequest) Reset() {
+	*x = GetCandlesRequest{}
+	mi := &file_api_core_v1_external_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCandlesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCandlesRequest) ProtoMessage() {}
+
+func (x *GetCandlesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_core_v1_external_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCandlesRequest.ProtoReflect.Descriptor instead.
+func (*GetCandlesRequest) Descriptor() ([]byte, []int) {
+	return file_api_core_v1_external_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetCandlesRequest) GetTicker() string {
+	if x != nil {
+		return x.Ticker
+	}
+	return ""
+}
+
+func (x *GetCandlesRequest) GetInterval() string {
+	if x != nil {
+		return x.Interval
+	}
+	return ""
+}
+
+func (x *GetCandlesRequest) GetFrom() *timestamppb.Timestamp {
+	if x != nil {
+		return x.From
+	}
+	return nil
+}
+
+func (x *GetCandlesRequest) GetTo() *timestamppb.Timestamp {
+	if x != nil {
+		return x.To
+	}
+	return nil
+}
+
+type GetCandlesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Candles       []*Candle              `protobuf:"bytes,1,rep,name=candles,proto3" json:"candles,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCandlesResponse) Reset() {
+	*x = GetCandlesResponse{}
+	mi := &file_api_core_v1_external_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCandlesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCandlesResponse) ProtoMessage() {}
+
+func (x *GetCandlesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_core_v1_external_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCandlesResponse.ProtoReflect.Descriptor instead.
+func (*GetCandlesResponse) Descriptor() ([]byte, []int) {
+	return file_api_core_v1_external_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetCandlesResponse) GetCandles() []*Candle {
+	if x != nil {
+		return x.Candles
+	}
+	return nil
+}
+
 var File_api_core_v1_external_proto protoreflect.FileDescriptor
 
 const file_api_core_v1_external_proto_rawDesc = "" +
 	"\n" +
-	"\x1aapi/core/v1/external.proto\x12\vapi.core.v1\x1a\x17api/core/v1/token.proto\x1a\x16api/core/v1/user.proto\"A\n" +
+	"\x1aapi/core/v1/external.proto\x12\vapi.core.v1\x1a\x18api/core/v1/candle.proto\x1a\x17api/core/v1/token.proto\x1a\x16api/core/v1/user.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"A\n" +
 	"\x0fRegisterRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"9\n" +
@@ -218,10 +332,19 @@ const file_api_core_v1_external_proto_rawDesc = "" +
 	"\x15CreateApiTokenRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"B\n" +
 	"\x16CreateApiTokenResponse\x12(\n" +
-	"\x05token\x18\x01 \x01(\v2\x12.api.core.v1.TokenR\x05token2\xb5\x01\n" +
-	"\vCoreService\x12I\n" +
-	"\bRegister\x12\x1c.api.core.v1.RegisterRequest\x1a\x1d.api.core.v1.RegisterResponse\"\x00\x12[\n" +
-	"\x0eCreateApiToken\x12\".api.core.v1.CreateApiTokenRequest\x1a#.api.core.v1.CreateApiTokenResponse\"\x00B5Z3market-tracker/lib/schema/gen/go/api/core/v1;corev1b\x06proto3"
+	"\x05token\x18\x01 \x01(\v2\x12.api.core.v1.TokenR\x05token\"\xa3\x01\n" +
+	"\x11GetCandlesRequest\x12\x16\n" +
+	"\x06ticker\x18\x01 \x01(\tR\x06ticker\x12\x1a\n" +
+	"\binterval\x18\x02 \x01(\tR\binterval\x12.\n" +
+	"\x04from\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x04from\x12*\n" +
+	"\x02to\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x02to\"C\n" +
+	"\x12GetCandlesResponse\x12-\n" +
+	"\acandles\x18\x01 \x03(\v2\x13.api.core.v1.CandleR\acandles2\xc0\x02\n" +
+	"\vCoreService\x12Z\n" +
+	"\bRegister\x12\x1c.api.core.v1.RegisterRequest\x1a\x1d.api.core.v1.RegisterResponse\"\x11\x82\xd3\xe4\x93\x02\v\"\t/register\x12p\n" +
+	"\x0eCreateApiToken\x12\".api.core.v1.CreateApiTokenRequest\x1a#.api.core.v1.CreateApiTokenResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\"\r/create-token\x12c\n" +
+	"\n" +
+	"GetCandles\x12\x1e.api.core.v1.GetCandlesRequest\x1a\x1f.api.core.v1.GetCandlesResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/get-candlesB5Z3market-tracker/lib/schema/gen/go/api/core/v1;corev1b\x06proto3"
 
 var (
 	file_api_core_v1_external_proto_rawDescOnce sync.Once
@@ -235,27 +358,36 @@ func file_api_core_v1_external_proto_rawDescGZIP() []byte {
 	return file_api_core_v1_external_proto_rawDescData
 }
 
-var file_api_core_v1_external_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_api_core_v1_external_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_api_core_v1_external_proto_goTypes = []any{
 	(*RegisterRequest)(nil),        // 0: api.core.v1.RegisterRequest
 	(*RegisterResponse)(nil),       // 1: api.core.v1.RegisterResponse
 	(*CreateApiTokenRequest)(nil),  // 2: api.core.v1.CreateApiTokenRequest
 	(*CreateApiTokenResponse)(nil), // 3: api.core.v1.CreateApiTokenResponse
-	(*User)(nil),                   // 4: api.core.v1.User
-	(*Token)(nil),                  // 5: api.core.v1.Token
+	(*GetCandlesRequest)(nil),      // 4: api.core.v1.GetCandlesRequest
+	(*GetCandlesResponse)(nil),     // 5: api.core.v1.GetCandlesResponse
+	(*User)(nil),                   // 6: api.core.v1.User
+	(*Token)(nil),                  // 7: api.core.v1.Token
+	(*timestamppb.Timestamp)(nil),  // 8: google.protobuf.Timestamp
+	(*Candle)(nil),                 // 9: api.core.v1.Candle
 }
 var file_api_core_v1_external_proto_depIdxs = []int32{
-	4, // 0: api.core.v1.RegisterResponse.user:type_name -> api.core.v1.User
-	5, // 1: api.core.v1.CreateApiTokenResponse.token:type_name -> api.core.v1.Token
-	0, // 2: api.core.v1.CoreService.Register:input_type -> api.core.v1.RegisterRequest
-	2, // 3: api.core.v1.CoreService.CreateApiToken:input_type -> api.core.v1.CreateApiTokenRequest
-	1, // 4: api.core.v1.CoreService.Register:output_type -> api.core.v1.RegisterResponse
-	3, // 5: api.core.v1.CoreService.CreateApiToken:output_type -> api.core.v1.CreateApiTokenResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	6, // 0: api.core.v1.RegisterResponse.user:type_name -> api.core.v1.User
+	7, // 1: api.core.v1.CreateApiTokenResponse.token:type_name -> api.core.v1.Token
+	8, // 2: api.core.v1.GetCandlesRequest.from:type_name -> google.protobuf.Timestamp
+	8, // 3: api.core.v1.GetCandlesRequest.to:type_name -> google.protobuf.Timestamp
+	9, // 4: api.core.v1.GetCandlesResponse.candles:type_name -> api.core.v1.Candle
+	0, // 5: api.core.v1.CoreService.Register:input_type -> api.core.v1.RegisterRequest
+	2, // 6: api.core.v1.CoreService.CreateApiToken:input_type -> api.core.v1.CreateApiTokenRequest
+	4, // 7: api.core.v1.CoreService.GetCandles:input_type -> api.core.v1.GetCandlesRequest
+	1, // 8: api.core.v1.CoreService.Register:output_type -> api.core.v1.RegisterResponse
+	3, // 9: api.core.v1.CoreService.CreateApiToken:output_type -> api.core.v1.CreateApiTokenResponse
+	5, // 10: api.core.v1.CoreService.GetCandles:output_type -> api.core.v1.GetCandlesResponse
+	8, // [8:11] is the sub-list for method output_type
+	5, // [5:8] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_api_core_v1_external_proto_init() }
@@ -263,6 +395,7 @@ func file_api_core_v1_external_proto_init() {
 	if File_api_core_v1_external_proto != nil {
 		return
 	}
+	file_api_core_v1_candle_proto_init()
 	file_api_core_v1_token_proto_init()
 	file_api_core_v1_user_proto_init()
 	type x struct{}
@@ -271,7 +404,7 @@ func file_api_core_v1_external_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_core_v1_external_proto_rawDesc), len(file_api_core_v1_external_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

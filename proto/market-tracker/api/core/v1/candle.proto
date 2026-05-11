@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package api.core.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "market-tracker/lib/schema/gen/go/api/core/v1;corev1";
+
+message Candle {
+  string ticker = 1;
+  string interval = 2;
+  double open = 4;
+  double high = 5;
+  double low = 6;
+  double close = 7;
+  double volume = 8;
+  google.protobuf.Timestamp time = 3;
+}

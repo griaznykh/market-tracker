@@ -2,14 +2,26 @@ syntax = "proto3";
 
 package api.core.v1;
 
+import "api/core/v1/candle.proto";
 import "api/core/v1/token.proto";
 import "api/core/v1/user.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "market-tracker/lib/schema/gen/go/api/core/v1;corev1";
 
 service CoreService {
-  rpc Register(RegisterRequest) returns (RegisterResponse) {}
-  rpc CreateApiToken(CreateApiTokenRequest) returns (CreateApiTokenResponse) {}
+  rpc Register(RegisterRequest) returns (RegisterResponse) {
+    option (google.api.http) = {post: "/register"};
+  }
+
+  rpc CreateApiToken(CreateApiTokenRequest) returns (CreateApiTokenResponse) {
+    option (google.api.http) = {post: "/create-token"};
+  }
+
+  rpc GetCandles(GetCandlesRequest) returns (GetCandlesResponse) {
+    option (google.api.http) = {get: "/get-candles"};
+  }
 }
 
 message RegisterRequest {
@@ -27,4 +39,15 @@ message CreateApiTokenRequest {
 
 message CreateApiTokenResponse {
   api.core.v1.Token token = 1;
+}
+
+message GetCandlesRequest {
+  string ticker = 1;
+  string interval = 2;
+  google.protobuf.Timestamp from = 3;
+  google.protobuf.Timestamp to = 4;
+}
+
+message GetCandlesResponse {
+  repeated Candle candles = 1;
 }

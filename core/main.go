@@ -48,11 +48,20 @@ func main() {
 		return
 	}
 
+	externalService, err := service.NewExternalService(&service.ExternalServiceConfig{
+		DB: dbClient,
+	})
+	if err != nil {
+		e := fmt.Errorf("init external gRPC service: %w", err)
+		log.Println(e.Error())
+		return
+	}
+
 	serverConfig := server.Config{
-		GRPC:     &server.GRPCServer{Port: config.GRPC_PORT, ReflectionEnabled: config.GRPC_REFLECTION},
-		HTTP:     &server.HTTPServer{Port: config.HTTP_PORT},
+		GRPC: &server.GRPCServer{Port: config.GRPC_PORT, ReflectionEnabled: config.GRPC_REFLECTION},
+		HTTP: &server.HTTPServer{Port: config.HTTP_PORT},
 		Services: []service.SelfRegisteringService{
-			// TODO add services
+			externalService,
 		},
 	}
 
