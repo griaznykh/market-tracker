@@ -8,10 +8,10 @@ import (
 )
 
 type Token struct {
-	Id        string
-	UserId    string
-	Token     string
-	CreatedAt time.Time
+	Id        string    `db:"id"`
+	UserId    string    `db:"user_id"`
+	Token     string    `db:"token"`
+	CreatedAt time.Time `db:"created_at"`
 }
 
 func (t Token) ToPB() *pb.Token {

@@ -8,11 +8,12 @@ import (
 )
 
 type Config struct {
-	DSN             string
-	TICKERS         []string
-	GRPC_PORT       uint
-	GRPC_REFLECTION bool
-	HTTP_PORT       uint
+	DSN              string
+	TICKERS          []string
+	GRPC_PORT        uint
+	GRPC_REFLECTION  bool
+	HTTP_PORT        uint
+	INVEST_API_TOKEN string
 }
 
 func NewConfig() *Config {
@@ -25,6 +26,8 @@ func NewConfig() *Config {
 	db_host := getEnv("DB_HOST", "postgres")
 	db_port := getEnv("DB_PORT", "5432")
 	db_name := getEnv("DB_NAME", "marketdata")
+
+	invest_api_token := getEnv("INVEST_API_TOKEN", "")
 
 	if reflection := getEnv("REFLECTION", "false"); reflection != "" {
 		grpc_reflection, _ = strconv.ParseBool(reflection)
@@ -39,11 +42,12 @@ func NewConfig() *Config {
 	}
 
 	return &Config{
-		DSN:             fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", db_username, db_password, db_host, db_port, db_name),
-		TICKERS:         strings.Split(os.Getenv("TICKERS"), ","),
-		GRPC_REFLECTION: grpc_reflection,
-		GRPC_PORT:       uint(grpc_port),
-		HTTP_PORT:       uint(http_port),
+		DSN:              fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", db_username, db_password, db_host, db_port, db_name),
+		TICKERS:          strings.Split(os.Getenv("TICKERS"), ","),
+		GRPC_REFLECTION:  grpc_reflection,
+		GRPC_PORT:        uint(grpc_port),
+		HTTP_PORT:        uint(http_port),
+		INVEST_API_TOKEN: invest_api_token,
 	}
 }
 
