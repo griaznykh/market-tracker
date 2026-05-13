@@ -7,7 +7,7 @@ create table users (
     created_at timestamp default current_timestamp
 );
 
-create table api_token (
+create table api_tokens (
     id uuid primary key,
     user_id uuid not null references users(id) on delete cascade,
     token varchar(255) not null unique,
@@ -17,4 +17,4 @@ create table api_token (
 ---- create above / drop below ----
 
 drop table users;
-drop table api_token;
+drop table api_tokens;

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Config struct {
@@ -14,6 +15,8 @@ type Config struct {
 	GRPC_REFLECTION  bool
 	HTTP_PORT        uint
 	INVEST_API_TOKEN string
+	JWT_SECRET       string
+	JWT_DURATION     time.Duration
 }
 
 func NewConfig() *Config {
@@ -41,6 +44,13 @@ func NewConfig() *Config {
 		http_port, _ = strconv.ParseUint(http_port_str, 10, 64)
 	}
 
+	jwt_secret := getEnv("JWT_SECRET", "")
+	jwt_duration_str := getEnv("JWT_DURATION", "1d")
+	jwt_duration, err := time.ParseDuration(jwt_duration_str)
+	if err != nil {
+		jwt_duration = 24 * time.Hour
+	}
+
 	return &Config{
 		DSN:              fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", db_username, db_password, db_host, db_port, db_name),
 		TICKERS:          strings.Split(os.Getenv("TICKERS"), ","),
@@ -48,6 +58,8 @@ func NewConfig() *Config {
 		GRPC_PORT:        uint(grpc_port),
 		HTTP_PORT:        uint(http_port),
 		INVEST_API_TOKEN: invest_api_token,
+		JWT_DURATION:     jwt_duration,
+		JWT_SECRET:       jwt_secret,
 	}
 }
 

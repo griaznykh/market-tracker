@@ -8,6 +8,7 @@ import (
 	grpc_protovalidate "market-service/internal/grpc/middleware/protovalidate"
 	grpc_timeout "market-service/internal/grpc/middleware/timeout"
 	"market-service/internal/grpc/service"
+	"market-service/internal/registry"
 	"net"
 	"net/http"
 	"time"
@@ -32,15 +33,17 @@ type (
 	}
 
 	Config struct {
-		GRPC     *GRPCServer
-		HTTP     *HTTPServer
-		Services []service.SelfRegisteringService
+		GRPC        *GRPCServer
+		HTTP        *HTTPServer
+		Services    []service.SelfRegisteringService
+		JwtRegistry registry.JwtRegistry
 	}
 
 	Server struct {
-		grpc     *GRPCServer
-		http     *HTTPServer
-		services []service.SelfRegisteringService
+		grpc        *GRPCServer
+		http        *HTTPServer
+		services    []service.SelfRegisteringService
+		jwtRegistry registry.JwtRegistry
 	}
 )
 
@@ -51,6 +54,9 @@ func (c *Config) validate() error {
 
 	case c.HTTP == nil:
 		return errors.New("http server settings may not be nil")
+
+	case c.JwtRegistry == nil:
+		return errors.New("jwt registry settings may not be nil")
 
 	default:
 		return nil
@@ -64,9 +70,10 @@ func New(config Config) (*Server, error) {
 	}
 
 	return &Server{
-		grpc:     config.GRPC,
-		http:     config.HTTP,
-		services: config.Services,
+		grpc:        config.GRPC,
+		http:        config.HTTP,
+		services:    config.Services,
+		jwtRegistry: config.JwtRegistry,
 	}, nil
 }
 

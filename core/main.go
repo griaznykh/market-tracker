@@ -11,6 +11,7 @@ import (
 	"market-service/internal/db"
 	"market-service/internal/grpc/server"
 	"market-service/internal/grpc/service"
+	"market-service/internal/registry"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -57,12 +58,15 @@ func main() {
 		return
 	}
 
+	jwtRegistry := registry.NewJwtRegistry(config.JWT_SECRET, config.JWT_DURATION)
+
 	serverConfig := server.Config{
 		GRPC: &server.GRPCServer{Port: config.GRPC_PORT, ReflectionEnabled: config.GRPC_REFLECTION},
 		HTTP: &server.HTTPServer{Port: config.HTTP_PORT},
 		Services: []service.SelfRegisteringService{
 			externalService,
 		},
+		JwtRegistry: jwtRegistry,
 	}
 
 	server, err := server.New(serverConfig)
