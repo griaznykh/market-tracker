@@ -5,13 +5,13 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"lib/auth"
 	"lib/signal"
 	"log"
 	config "market-service/internal/configs"
 	"market-service/internal/db"
 	"market-service/internal/grpc/server"
 	"market-service/internal/grpc/service"
-	"market-service/internal/registry"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -49,16 +49,18 @@ func main() {
 		return
 	}
 
+	jwtManager := auth.NewJwtManager(config.JWT_SECRET, config.JWT_DURATION)
+
 	externalService, err := service.NewExternalService(&service.ExternalServiceConfig{
-		DB: dbClient,
+		DB:         dbClient,
+		JwtManager: jwtManager,
 	})
+
 	if err != nil {
 		e := fmt.Errorf("init external gRPC service: %w", err)
 		log.Println(e.Error())
 		return
 	}
-
-	jwtRegistry := registry.NewJwtRegistry(config.JWT_SECRET, config.JWT_DURATION)
 
 	serverConfig := server.Config{
 		GRPC: &server.GRPCServer{Port: config.GRPC_PORT, ReflectionEnabled: config.GRPC_REFLECTION},
@@ -66,7 +68,7 @@ func main() {
 		Services: []service.SelfRegisteringService{
 			externalService,
 		},
-		JwtRegistry: jwtRegistry,
+		JwtManager: jwtManager,
 	}
 
 	server, err := server.New(serverConfig)

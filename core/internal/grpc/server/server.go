@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"lib/auth"
 	"log"
 	grpc_protovalidate "market-service/internal/grpc/middleware/protovalidate"
 	grpc_timeout "market-service/internal/grpc/middleware/timeout"
 	"market-service/internal/grpc/service"
-	"market-service/internal/registry"
 	"net"
 	"net/http"
 	"time"
@@ -33,17 +33,17 @@ type (
 	}
 
 	Config struct {
-		GRPC        *GRPCServer
-		HTTP        *HTTPServer
-		Services    []service.SelfRegisteringService
-		JwtRegistry registry.JwtRegistry
+		GRPC       *GRPCServer
+		HTTP       *HTTPServer
+		Services   []service.SelfRegisteringService
+		JwtManager auth.JwtManager
 	}
 
 	Server struct {
-		grpc        *GRPCServer
-		http        *HTTPServer
-		services    []service.SelfRegisteringService
-		jwtRegistry registry.JwtRegistry
+		grpc       *GRPCServer
+		http       *HTTPServer
+		services   []service.SelfRegisteringService
+		jwtManager auth.JwtManager
 	}
 )
 
@@ -55,8 +55,8 @@ func (c *Config) validate() error {
 	case c.HTTP == nil:
 		return errors.New("http server settings may not be nil")
 
-	case c.JwtRegistry == nil:
-		return errors.New("jwt registry settings may not be nil")
+	case c.JwtManager == nil:
+		return errors.New("jwt manager settings may not be nil")
 
 	default:
 		return nil
@@ -70,10 +70,10 @@ func New(config Config) (*Server, error) {
 	}
 
 	return &Server{
-		grpc:        config.GRPC,
-		http:        config.HTTP,
-		services:    config.Services,
-		jwtRegistry: config.JwtRegistry,
+		grpc:       config.GRPC,
+		http:       config.HTTP,
+		services:   config.Services,
+		jwtManager: config.JwtManager,
 	}, nil
 }
 
@@ -83,7 +83,13 @@ func (server *Server) Run(ctx context.Context) error {
 	grpcServerAddress := fmt.Sprintf(":%d", server.grpc.Port)
 	httpServerAddress := fmt.Sprintf(":%d", server.http.Port)
 
-	grpcSrv := getGRPCServer()
+	authInterceptor := auth.NewAuthMiddleware(server.jwtManager)
+
+	grpcSrv := getGRPCServer(nil, authInterceptor.UnaryServerInterceptor(map[string]bool{
+		"/api.core.v1.CoreService/Register": true,
+		"/api.core.v1.CoreService/Login":    true,
+	}))
+
 	httpSrv, httpMux := getHTTPServer(httpServerAddress)
 
 	grpcDialOpts := []grpc.DialOption{
@@ -145,19 +151,33 @@ func (server *Server) Run(ctx context.Context) error {
 	return g.Wait()
 }
 
-func getGRPCServer(inOpts ...grpc.ServerOption) *grpc.Server {
+func getGRPCServer(inOpts []grpc.ServerOption, inInterceptors ...grpc.UnaryServerInterceptor) *grpc.Server {
 	validator, err := protovalidate.New()
 	if err != nil {
 		panic(fmt.Errorf("initialize protovalidate: %w", err))
 	}
 
+	interceptors := []grpc.UnaryServerInterceptor{
+		grpc_recovery.UnaryServerInterceptor(),
+		grpc_timeout.UnaryServerInterceptor(30 * time.Second),
+	}
+
+	// external middleware
+	interceptors = append(
+		interceptors,
+		inInterceptors...,
+	)
+
+	interceptors = append(
+		interceptors,
+		grpc_protovalidate.UnaryServerInterceptor(
+			validator,
+		),
+	)
+
 	srvOpts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
-			grpc_timeout.UnaryServerInterceptor(30*time.Second),
-			grpc_recovery.UnaryServerInterceptor(),
-			grpc_protovalidate.UnaryServerInterceptor(
-				validator,
-			),
+			interceptors...,
 		),
 	}
 

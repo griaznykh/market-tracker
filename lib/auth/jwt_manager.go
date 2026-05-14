@@ -1,4 +1,4 @@
-package registry
+package auth
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type (
@@ -15,32 +16,32 @@ type (
 		jwt.RegisteredClaims
 	}
 
-	JwtRegistry interface {
-		Generate(ctx context.Context, userId string) (token string, err error)
+	JwtManager interface {
+		Generate(ctx context.Context, userId uuid.UUID) (token string, err error)
 		Verify(ctx context.Context, token string) (claims *JwtClaims, err error)
 	}
 )
 
-type jwtRegistry struct {
+type jwtManager struct {
 	secret   string
 	duration time.Duration
 }
 
-func NewJwtRegistry(secret string, duration time.Duration) JwtRegistry {
-	return &jwtRegistry{
+func NewJwtManager(secret string, duration time.Duration) JwtManager {
+	return &jwtManager{
 		secret:   secret,
 		duration: duration,
 	}
 }
 
-func (r *jwtRegistry) Generate(ctx context.Context, userId string) (token string, err error) {
+func (r *jwtManager) Generate(ctx context.Context, userId uuid.UUID) (token string, err error) {
 	now := time.Now()
 
 	claims := JwtClaims{
-		Id: userId,
+		Id: userId.String(),
 
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   userId,
+			Subject:   userId.String(),
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(r.duration)),
 			NotBefore: jwt.NewNumericDate(now),
@@ -56,7 +57,7 @@ func (r *jwtRegistry) Generate(ctx context.Context, userId string) (token string
 	return signedToken, nil
 }
 
-func (r *jwtRegistry) Verify(ctx context.Context, token string) (claims *JwtClaims, err error) {
+func (r *jwtManager) Verify(ctx context.Context, token string) (claims *JwtClaims, err error) {
 	decode, err := jwt.ParseWithClaims(
 		token,
 		&JwtClaims{},

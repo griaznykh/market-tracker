@@ -23,9 +23,113 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type LoginRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginRequest) Reset() {
+	*x = LoginRequest{}
+	mi := &file_api_core_v1_external_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginRequest) ProtoMessage() {}
+
+func (x *LoginRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_core_v1_external_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginRequest.ProtoReflect.Descriptor instead.
+func (*LoginRequest) Descriptor() ([]byte, []int) {
+	return file_api_core_v1_external_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *LoginRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *LoginRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type LoginResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	AccessToken   string                 `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginResponse) Reset() {
+	*x = LoginResponse{}
+	mi := &file_api_core_v1_external_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginResponse) ProtoMessage() {}
+
+func (x *LoginResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_core_v1_external_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginResponse.ProtoReflect.Descriptor instead.
+func (*LoginResponse) Descriptor() ([]byte, []int) {
+	return file_api_core_v1_external_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *LoginResponse) GetUser() *User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+func (x *LoginResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
 	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -33,7 +137,7 @@ type RegisterRequest struct {
 
 func (x *RegisterRequest) Reset() {
 	*x = RegisterRequest{}
-	mi := &file_api_core_v1_external_proto_msgTypes[0]
+	mi := &file_api_core_v1_external_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -45,7 +149,7 @@ func (x *RegisterRequest) String() string {
 func (*RegisterRequest) ProtoMessage() {}
 
 func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_core_v1_external_proto_msgTypes[0]
+	mi := &file_api_core_v1_external_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -58,12 +162,12 @@ func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterRequest.ProtoReflect.Descriptor instead.
 func (*RegisterRequest) Descriptor() ([]byte, []int) {
-	return file_api_core_v1_external_proto_rawDescGZIP(), []int{0}
+	return file_api_core_v1_external_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *RegisterRequest) GetName() string {
+func (x *RegisterRequest) GetEmail() string {
 	if x != nil {
-		return x.Name
+		return x.Email
 	}
 	return ""
 }
@@ -84,7 +188,7 @@ type RegisterResponse struct {
 
 func (x *RegisterResponse) Reset() {
 	*x = RegisterResponse{}
-	mi := &file_api_core_v1_external_proto_msgTypes[1]
+	mi := &file_api_core_v1_external_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -96,7 +200,7 @@ func (x *RegisterResponse) String() string {
 func (*RegisterResponse) ProtoMessage() {}
 
 func (x *RegisterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_core_v1_external_proto_msgTypes[1]
+	mi := &file_api_core_v1_external_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -109,7 +213,7 @@ func (x *RegisterResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterResponse.ProtoReflect.Descriptor instead.
 func (*RegisterResponse) Descriptor() ([]byte, []int) {
-	return file_api_core_v1_external_proto_rawDescGZIP(), []int{1}
+	return file_api_core_v1_external_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *RegisterResponse) GetUser() *User {
@@ -128,7 +232,7 @@ type CreateApiTokenRequest struct {
 
 func (x *CreateApiTokenRequest) Reset() {
 	*x = CreateApiTokenRequest{}
-	mi := &file_api_core_v1_external_proto_msgTypes[2]
+	mi := &file_api_core_v1_external_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -140,7 +244,7 @@ func (x *CreateApiTokenRequest) String() string {
 func (*CreateApiTokenRequest) ProtoMessage() {}
 
 func (x *CreateApiTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_core_v1_external_proto_msgTypes[2]
+	mi := &file_api_core_v1_external_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -153,7 +257,7 @@ func (x *CreateApiTokenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateApiTokenRequest.ProtoReflect.Descriptor instead.
 func (*CreateApiTokenRequest) Descriptor() ([]byte, []int) {
-	return file_api_core_v1_external_proto_rawDescGZIP(), []int{2}
+	return file_api_core_v1_external_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateApiTokenRequest) GetName() string {
@@ -172,7 +276,7 @@ type CreateApiTokenResponse struct {
 
 func (x *CreateApiTokenResponse) Reset() {
 	*x = CreateApiTokenResponse{}
-	mi := &file_api_core_v1_external_proto_msgTypes[3]
+	mi := &file_api_core_v1_external_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -184,7 +288,7 @@ func (x *CreateApiTokenResponse) String() string {
 func (*CreateApiTokenResponse) ProtoMessage() {}
 
 func (x *CreateApiTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_core_v1_external_proto_msgTypes[3]
+	mi := &file_api_core_v1_external_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -197,7 +301,7 @@ func (x *CreateApiTokenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateApiTokenResponse.ProtoReflect.Descriptor instead.
 func (*CreateApiTokenResponse) Descriptor() ([]byte, []int) {
-	return file_api_core_v1_external_proto_rawDescGZIP(), []int{3}
+	return file_api_core_v1_external_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CreateApiTokenResponse) GetToken() *Token {
@@ -219,7 +323,7 @@ type GetCandlesRequest struct {
 
 func (x *GetCandlesRequest) Reset() {
 	*x = GetCandlesRequest{}
-	mi := &file_api_core_v1_external_proto_msgTypes[4]
+	mi := &file_api_core_v1_external_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -231,7 +335,7 @@ func (x *GetCandlesRequest) String() string {
 func (*GetCandlesRequest) ProtoMessage() {}
 
 func (x *GetCandlesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_core_v1_external_proto_msgTypes[4]
+	mi := &file_api_core_v1_external_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -244,7 +348,7 @@ func (x *GetCandlesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCandlesRequest.ProtoReflect.Descriptor instead.
 func (*GetCandlesRequest) Descriptor() ([]byte, []int) {
-	return file_api_core_v1_external_proto_rawDescGZIP(), []int{4}
+	return file_api_core_v1_external_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetCandlesRequest) GetTicker() string {
@@ -284,7 +388,7 @@ type GetCandlesResponse struct {
 
 func (x *GetCandlesResponse) Reset() {
 	*x = GetCandlesResponse{}
-	mi := &file_api_core_v1_external_proto_msgTypes[5]
+	mi := &file_api_core_v1_external_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -296,7 +400,7 @@ func (x *GetCandlesResponse) String() string {
 func (*GetCandlesResponse) ProtoMessage() {}
 
 func (x *GetCandlesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_core_v1_external_proto_msgTypes[5]
+	mi := &file_api_core_v1_external_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -309,7 +413,7 @@ func (x *GetCandlesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCandlesResponse.ProtoReflect.Descriptor instead.
 func (*GetCandlesResponse) Descriptor() ([]byte, []int) {
-	return file_api_core_v1_external_proto_rawDescGZIP(), []int{5}
+	return file_api_core_v1_external_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetCandlesResponse) GetCandles() []*Candle {
@@ -323,9 +427,15 @@ var File_api_core_v1_external_proto protoreflect.FileDescriptor
 
 const file_api_core_v1_external_proto_rawDesc = "" +
 	"\n" +
-	"\x1aapi/core/v1/external.proto\x12\vapi.core.v1\x1a\x18api/core/v1/candle.proto\x1a\x17api/core/v1/token.proto\x1a\x16api/core/v1/user.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"A\n" +
-	"\x0fRegisterRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1a\n" +
+	"\x1aapi/core/v1/external.proto\x12\vapi.core.v1\x1a\x18api/core/v1/candle.proto\x1a\x17api/core/v1/token.proto\x1a\x16api/core/v1/user.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"@\n" +
+	"\fLoginRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"Y\n" +
+	"\rLoginResponse\x12%\n" +
+	"\x04user\x18\x01 \x01(\v2\x11.api.core.v1.UserR\x04user\x12!\n" +
+	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\"C\n" +
+	"\x0fRegisterRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"9\n" +
 	"\x10RegisterResponse\x12%\n" +
 	"\x04user\x18\x01 \x01(\v2\x11.api.core.v1.UserR\x04user\"+\n" +
@@ -339,8 +449,9 @@ const file_api_core_v1_external_proto_rawDesc = "" +
 	"\x04from\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x04from\x12*\n" +
 	"\x02to\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x02to\"C\n" +
 	"\x12GetCandlesResponse\x12-\n" +
-	"\acandles\x18\x01 \x03(\v2\x13.api.core.v1.CandleR\acandles2\xc0\x02\n" +
-	"\vCoreService\x12Z\n" +
+	"\acandles\x18\x01 \x03(\v2\x13.api.core.v1.CandleR\acandles2\x90\x03\n" +
+	"\vCoreService\x12N\n" +
+	"\x05Login\x12\x19.api.core.v1.LoginRequest\x1a\x1a.api.core.v1.LoginResponse\"\x0e\x82\xd3\xe4\x93\x02\b\"\x06/login\x12Z\n" +
 	"\bRegister\x12\x1c.api.core.v1.RegisterRequest\x1a\x1d.api.core.v1.RegisterResponse\"\x11\x82\xd3\xe4\x93\x02\v\"\t/register\x12p\n" +
 	"\x0eCreateApiToken\x12\".api.core.v1.CreateApiTokenRequest\x1a#.api.core.v1.CreateApiTokenResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\"\r/create-token\x12c\n" +
 	"\n" +
@@ -358,36 +469,41 @@ func file_api_core_v1_external_proto_rawDescGZIP() []byte {
 	return file_api_core_v1_external_proto_rawDescData
 }
 
-var file_api_core_v1_external_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_api_core_v1_external_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_api_core_v1_external_proto_goTypes = []any{
-	(*RegisterRequest)(nil),        // 0: api.core.v1.RegisterRequest
-	(*RegisterResponse)(nil),       // 1: api.core.v1.RegisterResponse
-	(*CreateApiTokenRequest)(nil),  // 2: api.core.v1.CreateApiTokenRequest
-	(*CreateApiTokenResponse)(nil), // 3: api.core.v1.CreateApiTokenResponse
-	(*GetCandlesRequest)(nil),      // 4: api.core.v1.GetCandlesRequest
-	(*GetCandlesResponse)(nil),     // 5: api.core.v1.GetCandlesResponse
-	(*User)(nil),                   // 6: api.core.v1.User
-	(*Token)(nil),                  // 7: api.core.v1.Token
-	(*timestamppb.Timestamp)(nil),  // 8: google.protobuf.Timestamp
-	(*Candle)(nil),                 // 9: api.core.v1.Candle
+	(*LoginRequest)(nil),           // 0: api.core.v1.LoginRequest
+	(*LoginResponse)(nil),          // 1: api.core.v1.LoginResponse
+	(*RegisterRequest)(nil),        // 2: api.core.v1.RegisterRequest
+	(*RegisterResponse)(nil),       // 3: api.core.v1.RegisterResponse
+	(*CreateApiTokenRequest)(nil),  // 4: api.core.v1.CreateApiTokenRequest
+	(*CreateApiTokenResponse)(nil), // 5: api.core.v1.CreateApiTokenResponse
+	(*GetCandlesRequest)(nil),      // 6: api.core.v1.GetCandlesRequest
+	(*GetCandlesResponse)(nil),     // 7: api.core.v1.GetCandlesResponse
+	(*User)(nil),                   // 8: api.core.v1.User
+	(*Token)(nil),                  // 9: api.core.v1.Token
+	(*timestamppb.Timestamp)(nil),  // 10: google.protobuf.Timestamp
+	(*Candle)(nil),                 // 11: api.core.v1.Candle
 }
 var file_api_core_v1_external_proto_depIdxs = []int32{
-	6, // 0: api.core.v1.RegisterResponse.user:type_name -> api.core.v1.User
-	7, // 1: api.core.v1.CreateApiTokenResponse.token:type_name -> api.core.v1.Token
-	8, // 2: api.core.v1.GetCandlesRequest.from:type_name -> google.protobuf.Timestamp
-	8, // 3: api.core.v1.GetCandlesRequest.to:type_name -> google.protobuf.Timestamp
-	9, // 4: api.core.v1.GetCandlesResponse.candles:type_name -> api.core.v1.Candle
-	0, // 5: api.core.v1.CoreService.Register:input_type -> api.core.v1.RegisterRequest
-	2, // 6: api.core.v1.CoreService.CreateApiToken:input_type -> api.core.v1.CreateApiTokenRequest
-	4, // 7: api.core.v1.CoreService.GetCandles:input_type -> api.core.v1.GetCandlesRequest
-	1, // 8: api.core.v1.CoreService.Register:output_type -> api.core.v1.RegisterResponse
-	3, // 9: api.core.v1.CoreService.CreateApiToken:output_type -> api.core.v1.CreateApiTokenResponse
-	5, // 10: api.core.v1.CoreService.GetCandles:output_type -> api.core.v1.GetCandlesResponse
-	8, // [8:11] is the sub-list for method output_type
-	5, // [5:8] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	8,  // 0: api.core.v1.LoginResponse.user:type_name -> api.core.v1.User
+	8,  // 1: api.core.v1.RegisterResponse.user:type_name -> api.core.v1.User
+	9,  // 2: api.core.v1.CreateApiTokenResponse.token:type_name -> api.core.v1.Token
+	10, // 3: api.core.v1.GetCandlesRequest.from:type_name -> google.protobuf.Timestamp
+	10, // 4: api.core.v1.GetCandlesRequest.to:type_name -> google.protobuf.Timestamp
+	11, // 5: api.core.v1.GetCandlesResponse.candles:type_name -> api.core.v1.Candle
+	0,  // 6: api.core.v1.CoreService.Login:input_type -> api.core.v1.LoginRequest
+	2,  // 7: api.core.v1.CoreService.Register:input_type -> api.core.v1.RegisterRequest
+	4,  // 8: api.core.v1.CoreService.CreateApiToken:input_type -> api.core.v1.CreateApiTokenRequest
+	6,  // 9: api.core.v1.CoreService.GetCandles:input_type -> api.core.v1.GetCandlesRequest
+	1,  // 10: api.core.v1.CoreService.Login:output_type -> api.core.v1.LoginResponse
+	3,  // 11: api.core.v1.CoreService.Register:output_type -> api.core.v1.RegisterResponse
+	5,  // 12: api.core.v1.CoreService.CreateApiToken:output_type -> api.core.v1.CreateApiTokenResponse
+	7,  // 13: api.core.v1.CoreService.GetCandles:output_type -> api.core.v1.GetCandlesResponse
+	10, // [10:14] is the sub-list for method output_type
+	6,  // [6:10] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_api_core_v1_external_proto_init() }
@@ -404,7 +520,7 @@ func file_api_core_v1_external_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_core_v1_external_proto_rawDesc), len(file_api_core_v1_external_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

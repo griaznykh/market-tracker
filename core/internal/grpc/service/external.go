@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"market-service/internal/db"
 
+	"lib/auth"
 	pb "lib/schema/gen/go/api/core/v1"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -15,13 +16,15 @@ import (
 type (
 	// ExternalServiceConfig defines ExternalService configuration.
 	ExternalServiceConfig struct {
-		DB *db.Client
+		DB         *db.Client
+		JwtManager auth.JwtManager
 	}
 
 	// ExternalService implements a customer-facing gRPC service.
 	ExternalService struct {
 		pb.UnimplementedCoreServiceServer
-		db *db.Client
+		db         *db.Client
+		jwtManager auth.JwtManager
 	}
 )
 
@@ -39,7 +42,8 @@ func NewExternalService(config *ExternalServiceConfig) (*ExternalService, error)
 	}
 
 	return &ExternalService{
-		db: config.DB,
+		db:         config.DB,
+		jwtManager: config.JwtManager,
 	}, nil
 }
 

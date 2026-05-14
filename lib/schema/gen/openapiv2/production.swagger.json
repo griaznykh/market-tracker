@@ -85,6 +85,39 @@
         ]
       }
     },
+    "/login": {
+      "post": {
+        "operationId": "Login",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/LoginResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    },
     "/register": {
       "post": {
         "operationId": "Register",
@@ -104,7 +137,7 @@
         },
         "parameters": [
           {
-            "name": "name",
+            "name": "email",
             "in": "query",
             "required": false,
             "type": "string"
@@ -181,6 +214,17 @@
             "type": "object",
             "$ref": "#/definitions/Candle"
           }
+        }
+      }
+    },
+    "LoginResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/User"
+        },
+        "accessToken": {
+          "type": "string"
         }
       }
     },
