@@ -27,7 +27,7 @@ type Token struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Token         string                 `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -100,7 +100,7 @@ const file_api_core_v1_token_proto_rawDesc = "" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x14\n" +
 	"\x05token\x18\x03 \x01(\tR\x05token\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB5Z3market-tracker/lib/schema/gen/go/api/core/v1;corev1b\x06proto3"
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB5Z3market-tracker/lib/schema/gen/go/api/core/v1;corev1b\x06proto3"
 
 var (
 	file_api_core_v1_token_proto_rawDescOnce sync.Once

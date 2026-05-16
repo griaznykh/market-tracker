@@ -59,10 +59,10 @@ func (s *ExternalService) Register(
 	}, nil
 }
 
-func (s *ExternalService) Login(
+func (s *ExternalService) CreateApiToken(
 	ctx context.Context,
-	req *pb.LoginRequest,
-) (*pb.LoginResponse, error) {
+	req *pb.CreateApiTokenRequest,
+) (*pb.CreateApiTokenResponse, error) {
 	user, err := s.db.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		return nil, status.Error(
@@ -82,7 +82,7 @@ func (s *ExternalService) Login(
 		)
 	}
 
-	token, err := s.jwtManager.Generate(ctx, user.Id)
+	access_token, err := s.jwtManager.Generate(ctx, user.Id)
 	if err != nil {
 		return nil, status.Error(
 			codes.Unauthenticated,
@@ -90,8 +90,28 @@ func (s *ExternalService) Login(
 		)
 	}
 
-	return &pb.LoginResponse{
-		User:        user.ToPB(),
-		AccessToken: token,
+	api_token := &schema.ApiToken{
+		Id:     uuid.New(),
+		Token:  access_token,
+		UserId: user.Id,
+	}
+
+	err = s.db.CreateToken(ctx, api_token)
+	if err != nil {
+		if errors.Is(err, db.ErrTokenAlreadyExist) {
+			return nil, status.Error(
+				codes.AlreadyExists,
+				"token already exist",
+			)
+		}
+
+		return nil, status.Error(
+			codes.Internal,
+			"failed to create token",
+		)
+	}
+
+	return &pb.CreateApiTokenResponse{
+		Token: api_token.Token,
 	}, nil
 }

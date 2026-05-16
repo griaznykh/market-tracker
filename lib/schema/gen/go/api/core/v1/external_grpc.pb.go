@@ -19,7 +19,6 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CoreService_Login_FullMethodName          = "/api.core.v1.CoreService/Login"
 	CoreService_Register_FullMethodName       = "/api.core.v1.CoreService/Register"
 	CoreService_CreateApiToken_FullMethodName = "/api.core.v1.CoreService/CreateApiToken"
 	CoreService_GetCandles_FullMethodName     = "/api.core.v1.CoreService/GetCandles"
@@ -29,7 +28,6 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CoreServiceClient interface {
-	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	CreateApiToken(ctx context.Context, in *CreateApiTokenRequest, opts ...grpc.CallOption) (*CreateApiTokenResponse, error)
 	GetCandles(ctx context.Context, in *GetCandlesRequest, opts ...grpc.CallOption) (*GetCandlesResponse, error)
@@ -41,16 +39,6 @@ type coreServiceClient struct {
 
 func NewCoreServiceClient(cc grpc.ClientConnInterface) CoreServiceClient {
 	return &coreServiceClient{cc}
-}
-
-func (c *coreServiceClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(LoginResponse)
-	err := c.cc.Invoke(ctx, CoreService_Login_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *coreServiceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
@@ -87,7 +75,6 @@ func (c *coreServiceClient) GetCandles(ctx context.Context, in *GetCandlesReques
 // All implementations must embed UnimplementedCoreServiceServer
 // for forward compatibility.
 type CoreServiceServer interface {
-	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	CreateApiToken(context.Context, *CreateApiTokenRequest) (*CreateApiTokenResponse, error)
 	GetCandles(context.Context, *GetCandlesRequest) (*GetCandlesResponse, error)
@@ -101,9 +88,6 @@ type CoreServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedCoreServiceServer struct{}
 
-func (UnimplementedCoreServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
-}
 func (UnimplementedCoreServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
@@ -132,24 +116,6 @@ func RegisterCoreServiceServer(s grpc.ServiceRegistrar, srv CoreServiceServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&CoreService_ServiceDesc, srv)
-}
-
-func _CoreService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LoginRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CoreServiceServer).Login(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CoreService_Login_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServiceServer).Login(ctx, req.(*LoginRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _CoreService_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -213,10 +179,6 @@ var CoreService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "api.core.v1.CoreService",
 	HandlerType: (*CoreServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Login",
-			Handler:    _CoreService_Login_Handler,
-		},
 		{
 			MethodName: "Register",
 			Handler:    _CoreService_Register_Handler,

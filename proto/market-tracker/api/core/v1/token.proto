@@ -10,5 +10,5 @@ message Token {
   string id = 1;
   string user_id = 2;
   string token = 3;
-  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp created_at = 4;
 }

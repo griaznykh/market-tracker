@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"lib/auth"
+	ratelimiter "lib/rate-limiter"
 	"lib/signal"
 	"log"
 	config "market-service/internal/configs"
@@ -13,6 +14,7 @@ import (
 	"market-service/internal/grpc/server"
 	"market-service/internal/grpc/service"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -49,6 +51,8 @@ func main() {
 		return
 	}
 
+	// 10 request per minute allowed for auth guard api
+	rateLimitManager := ratelimiter.NewRateLimiterManager(ctx, 10, time.Second*300, time.Second*60)
 	jwtManager := auth.NewJwtManager(config.JWT_SECRET, config.JWT_DURATION)
 
 	externalService, err := service.NewExternalService(&service.ExternalServiceConfig{
@@ -68,7 +72,8 @@ func main() {
 		Services: []service.SelfRegisteringService{
 			externalService,
 		},
-		JwtManager: jwtManager,
+		JwtManager:         jwtManager,
+		RateLimiterManager: rateLimitManager,
 	}
 
 	server, err := server.New(serverConfig)

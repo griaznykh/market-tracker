@@ -11,10 +11,6 @@ import "google/protobuf/timestamp.proto";
 option go_package = "market-tracker/lib/schema/gen/go/api/core/v1;corev1";
 
 service CoreService {
-  rpc Login(LoginRequest) returns (LoginResponse) {
-    option (google.api.http) = {post: "/login"};
-  }
-
   rpc Register(RegisterRequest) returns (RegisterResponse) {
     option (google.api.http) = {post: "/register"};
   }
@@ -28,16 +24,6 @@ service CoreService {
   }
 }
 
-message LoginRequest {
-  string email = 1;
-  string password = 2;
-}
-
-message LoginResponse {
-  api.core.v1.User user = 1;
-  string access_token = 2;
-}
-
 message RegisterRequest {
   string email = 1;
   string password = 2;
@@ -48,11 +34,12 @@ message RegisterResponse {
 }
 
 message CreateApiTokenRequest {
-  string name = 1;
+  string email = 1;
+  string password = 2;
 }
 
 message CreateApiTokenResponse {
-  api.core.v1.Token token = 1;
+  string token = 1;
 }
 
 message GetCandlesRequest {

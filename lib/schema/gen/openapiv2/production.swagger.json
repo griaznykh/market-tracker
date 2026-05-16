@@ -30,7 +30,13 @@
         },
         "parameters": [
           {
-            "name": "name",
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "password",
             "in": "query",
             "required": false,
             "type": "string"
@@ -81,39 +87,6 @@
             "required": false,
             "type": "string",
             "format": "date-time"
-          }
-        ]
-      }
-    },
-    "/login": {
-      "post": {
-        "operationId": "Login",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/LoginResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/Status"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "email",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "password",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ]
       }
@@ -201,7 +174,7 @@
       "type": "object",
       "properties": {
         "token": {
-          "$ref": "#/definitions/Token"
+          "type": "string"
         }
       }
     },
@@ -214,17 +187,6 @@
             "type": "object",
             "$ref": "#/definitions/Candle"
           }
-        }
-      }
-    },
-    "LoginResponse": {
-      "type": "object",
-      "properties": {
-        "user": {
-          "$ref": "#/definitions/User"
-        },
-        "accessToken": {
-          "type": "string"
         }
       }
     },
@@ -252,24 +214,6 @@
             "type": "object",
             "$ref": "#/definitions/Any"
           }
-        }
-      }
-    },
-    "Token": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "userId": {
-          "type": "string"
-        },
-        "token": {
-          "type": "string"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
         }
       }
     },

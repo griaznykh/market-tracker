@@ -31,7 +31,7 @@ func userColumns() []string {
 }
 
 func (c *Client) GetUser(ctx context.Context, userId uuid.UUID) (user *schema.User, err error) {
-	query, _, err := sq.Select(userColumns()...).From(userTableName).Where(sq.Eq{"id": userId}).Limit(1).PlaceholderFormat(sq.Dollar).ToSql()
+	query, _, err := sq.Select(userColumns()...).From(userTableName).Where(sq.Eq{TblColumn("id", userTableName): userId}).Limit(1).PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("build query: %w", err)
 	}
@@ -54,7 +54,7 @@ func (c *Client) GetUser(ctx context.Context, userId uuid.UUID) (user *schema.Us
 }
 
 func (c *Client) GetUserByEmail(ctx context.Context, email string) (user *schema.User, err error) {
-	query, args, err := sq.Select(userColumns()...).From(userTableName).Where(sq.Eq{"email": email}).Limit(1).PlaceholderFormat(sq.Dollar).ToSql()
+	query, args, err := sq.Select(userColumns()...).From(userTableName).Where(sq.Eq{TblColumn("email", userTableName): email}).Limit(1).PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("build query: %w", err)
 	}

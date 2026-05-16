@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"lib/auth"
+	grpc_protovalidate "lib/middleware/protovalidate"
+	"lib/middleware/ratelimit"
+	grpc_timeout "lib/middleware/timeout"
+	ratelimiter "lib/rate-limiter"
 	"log"
-	grpc_protovalidate "market-service/internal/grpc/middleware/protovalidate"
-	grpc_timeout "market-service/internal/grpc/middleware/timeout"
 	"market-service/internal/grpc/service"
 	"net"
 	"net/http"
@@ -33,17 +35,19 @@ type (
 	}
 
 	Config struct {
-		GRPC       *GRPCServer
-		HTTP       *HTTPServer
-		Services   []service.SelfRegisteringService
-		JwtManager auth.JwtManager
+		GRPC               *GRPCServer
+		HTTP               *HTTPServer
+		Services           []service.SelfRegisteringService
+		RateLimiterManager *ratelimiter.RateLimiterManager
+		JwtManager         auth.JwtManager
 	}
 
 	Server struct {
-		grpc       *GRPCServer
-		http       *HTTPServer
-		services   []service.SelfRegisteringService
-		jwtManager auth.JwtManager
+		grpc               *GRPCServer
+		http               *HTTPServer
+		services           []service.SelfRegisteringService
+		rateLimiterManager *ratelimiter.RateLimiterManager
+		jwtManager         auth.JwtManager
 	}
 )
 
@@ -58,6 +62,9 @@ func (c *Config) validate() error {
 	case c.JwtManager == nil:
 		return errors.New("jwt manager settings may not be nil")
 
+	case c.RateLimiterManager == nil:
+		return errors.New("rate limiter manager settings may not be nil")
+
 	default:
 		return nil
 	}
@@ -70,10 +77,11 @@ func New(config Config) (*Server, error) {
 	}
 
 	return &Server{
-		grpc:       config.GRPC,
-		http:       config.HTTP,
-		services:   config.Services,
-		jwtManager: config.JwtManager,
+		grpc:               config.GRPC,
+		http:               config.HTTP,
+		services:           config.Services,
+		jwtManager:         config.JwtManager,
+		rateLimiterManager: config.RateLimiterManager,
 	}, nil
 }
 
@@ -85,10 +93,18 @@ func (server *Server) Run(ctx context.Context) error {
 
 	authInterceptor := auth.NewAuthMiddleware(server.jwtManager)
 
-	grpcSrv := getGRPCServer(nil, authInterceptor.UnaryServerInterceptor(map[string]bool{
-		"/api.core.v1.CoreService/Register": true,
-		"/api.core.v1.CoreService/Login":    true,
-	}))
+	grpcSrv := getGRPCServer(nil,
+		authInterceptor.UnaryServerInterceptor(map[string]bool{
+			"/api.core.v1.CoreService/Register":       true,
+			"/api.core.v1.CoreService/CreateApiToken": true,
+		}), ratelimit.UnaryServerInterceptor(func(ctx context.Context) (string, bool) {
+			user, ok := auth.UserFromContext(ctx)
+			if ok {
+				return user.Id, ok
+			}
+			return "", ok
+		}, server.rateLimiterManager),
+	)
 
 	httpSrv, httpMux := getHTTPServer(httpServerAddress)
 
