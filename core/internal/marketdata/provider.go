@@ -11,9 +11,10 @@ type (
 	}
 
 	Trade struct {
-		Ticker string
-		Price  float64
-		Time   time.Time
+		Provider string
+		Ticker   string
+		Price    float64
+		Time     time.Time
 	}
 
 	MarketDataProvider interface {

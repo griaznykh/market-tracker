@@ -102,9 +102,10 @@ func (p *Provider) SubscribeTrades(
 				}
 
 				out <- marketdata.Trade{
-					Ticker: trade.GetTicker(),
-					Price:  trade.GetPrice().ToFloat(),
-					Time:   trade.GetTime().AsTime(),
+					Provider: "tbank",
+					Ticker:   trade.GetTicker(),
+					Price:    trade.GetPrice().ToFloat(),
+					Time:     trade.GetTime().AsTime(),
 				}
 			}
 		}
