@@ -27,8 +27,6 @@ func (c *Client) Migrate(ctx context.Context, migrations embed.FS) error {
 		return fmt.Errorf("migrations not found")
 	}
 
-	log.Println(subdir)
-
 	if err = migrator.LoadMigrations(subdir); err != nil {
 		return fmt.Errorf("load migrations: %w", err)
 	}
@@ -43,7 +41,7 @@ func (c *Client) Migrate(ctx context.Context, migrations embed.FS) error {
 		return fmt.Errorf("get current schema version: %w", err)
 	}
 
-	log.Println("migration's done %i", ver)
+	log.Printf("migration's done %d", ver)
 
 	return nil
 }

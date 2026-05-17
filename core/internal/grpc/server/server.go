@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"lib/auth"
-	grpc_protovalidate "lib/middleware/protovalidate"
-	"lib/middleware/ratelimit"
-	grpc_timeout "lib/middleware/timeout"
+	"lib/grpcx"
+	grpc_auth "lib/grpcx/middleware/auth"
+	grpc_protovalidate "lib/grpcx/middleware/protovalidate"
+	"lib/grpcx/middleware/ratelimit"
+	grpc_timeout "lib/grpcx/middleware/timeout"
 	ratelimiter "lib/rate-limiter"
-	"log"
-	"market-service/internal/grpc/service"
 	"net"
 	"net/http"
 	"time"
@@ -18,6 +18,7 @@ import (
 	"buf.build/go/protovalidate"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -35,17 +36,19 @@ type (
 	}
 
 	Config struct {
+		Logger             *zap.Logger
 		GRPC               *GRPCServer
 		HTTP               *HTTPServer
-		Services           []service.SelfRegisteringService
+		Services           []grpcx.SelfRegisteringService
 		RateLimiterManager *ratelimiter.RateLimiterManager
 		JwtManager         auth.JwtManager
 	}
 
 	Server struct {
+		logger             *zap.Logger
 		grpc               *GRPCServer
 		http               *HTTPServer
-		services           []service.SelfRegisteringService
+		services           []grpcx.SelfRegisteringService
 		rateLimiterManager *ratelimiter.RateLimiterManager
 		jwtManager         auth.JwtManager
 	}
@@ -77,6 +80,7 @@ func New(config Config) (*Server, error) {
 	}
 
 	return &Server{
+		logger:             config.Logger,
 		grpc:               config.GRPC,
 		http:               config.HTTP,
 		services:           config.Services,
@@ -91,7 +95,7 @@ func (server *Server) Run(ctx context.Context) error {
 	grpcServerAddress := fmt.Sprintf(":%d", server.grpc.Port)
 	httpServerAddress := fmt.Sprintf(":%d", server.http.Port)
 
-	authInterceptor := auth.NewAuthMiddleware(server.jwtManager)
+	authInterceptor := grpc_auth.NewAuthMiddleware(server.jwtManager)
 
 	grpcSrv := getGRPCServer(nil,
 		authInterceptor.UnaryServerInterceptor(map[string]bool{
@@ -135,7 +139,7 @@ func (server *Server) Run(ctx context.Context) error {
 			return fmt.Errorf("listen port: %w", err)
 		}
 
-		log.Println("starting grpc server on address", grpcServerAddress)
+		server.logger.Info("starting grpc server on address", zap.String("grpcServerAddress", grpcServerAddress))
 
 		return grpcSrv.Serve(listener)
 	})
@@ -143,7 +147,7 @@ func (server *Server) Run(ctx context.Context) error {
 	g.Go(func() error {
 		// start listening on http port
 
-		log.Println("starting http server on address", httpServerAddress)
+		server.logger.Info("starting http server on address", zap.String("httpServerAddress", httpServerAddress))
 
 		err := httpSrv.ListenAndServe()
 
@@ -156,10 +160,10 @@ func (server *Server) Run(ctx context.Context) error {
 
 	<-ctx.Done()
 
-	log.Println("application is shutting down, gracefully stopping all the servers")
+	server.logger.Info("application is shutting down, gracefully stopping all the servers")
 
 	if err := httpSrv.Shutdown(ctx); err != nil {
-		log.Println("failed to shutdown http server", err)
+		server.logger.Error("failed to shutdown http server", zap.Error(err))
 	}
 
 	grpcSrv.Stop()

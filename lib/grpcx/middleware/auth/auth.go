@@ -8,13 +8,15 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"lib/auth"
 )
 
 type AuthMiddleware struct {
-	jwtManager JwtManager
+	jwtManager auth.JwtManager
 }
 
-func NewAuthMiddleware(jwtManager JwtManager) *AuthMiddleware {
+func NewAuthMiddleware(jwtManager auth.JwtManager) *AuthMiddleware {
 	return &AuthMiddleware{
 		jwtManager: jwtManager,
 	}
@@ -73,11 +75,11 @@ func (m *AuthMiddleware) UnaryServerInterceptor(
 			)
 		}
 
-		user := &User{
+		user := &auth.User{
 			Id: claims.Id,
 		}
 
-		ctx = ContextWithUser(ctx, user)
+		ctx = auth.ContextWithUser(ctx, user)
 
 		return handler(ctx, req)
 	}

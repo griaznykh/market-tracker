@@ -13,11 +13,16 @@ import (
 	"market-service/internal/db"
 	"market-service/internal/grpc/server"
 	"market-service/internal/grpc/service"
+	"market-service/internal/marketdata"
+	"market-service/internal/providers/invest"
 	"net/http"
 	"time"
 
+	"lib/grpcx"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -33,12 +38,18 @@ func init() {
 func main() {
 	ctx := signal.Context()
 
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Println(fmt.Errorf("create new logger error: %w", err))
+		return
+	}
+
 	config := config.NewConfig()
 
 	dbPool, err := pgxpool.New(ctx, config.DSN)
 	if err != nil {
 		e := fmt.Errorf("connect to db: %w", err)
-		log.Println(e.Error())
+		logger.Error(e.Error())
 		return
 	}
 	defer dbPool.Close()
@@ -47,7 +58,7 @@ func main() {
 	err = dbClient.Migrate(ctx, migrations)
 	if err != nil {
 		e := fmt.Errorf("migrate db: %w", err)
-		log.Println(e.Error())
+		logger.Error(e.Error())
 		return
 	}
 
@@ -62,14 +73,15 @@ func main() {
 
 	if err != nil {
 		e := fmt.Errorf("init external gRPC service: %w", err)
-		log.Println(e.Error())
+		logger.Error(e.Error())
 		return
 	}
 
 	serverConfig := server.Config{
-		GRPC: &server.GRPCServer{Port: config.GRPC_PORT, ReflectionEnabled: config.GRPC_REFLECTION},
-		HTTP: &server.HTTPServer{Port: config.HTTP_PORT},
-		Services: []service.SelfRegisteringService{
+		Logger: logger,
+		GRPC:   &server.GRPCServer{Port: config.GRPC_PORT, ReflectionEnabled: config.GRPC_REFLECTION},
+		HTTP:   &server.HTTPServer{Port: config.HTTP_PORT},
+		Services: []grpcx.SelfRegisteringService{
 			externalService,
 		},
 		JwtManager:         jwtManager,
@@ -79,18 +91,63 @@ func main() {
 	server, err := server.New(serverConfig)
 	if err != nil {
 		e := fmt.Errorf("init gRPC server: %w", err)
-		log.Println(e.Error())
+		logger.Error(e.Error())
 		return
 	}
+
+	investConfig := invest.ProviderConfig{
+		Token: config.INVEST_API_TOKEN,
+	}
+
+	investProvider, err := invest.NewProvider(
+		ctx,
+		investConfig,
+		logger.Sugar(),
+	)
+
+	if err != nil {
+		e := fmt.Errorf("init invest provider err: %w", err)
+		logger.Error(e.Error())
+		return
+	}
+
+	defer investProvider.Close()
 
 	g, gCtx := errgroup.WithContext(ctx)
 	g.Go(func() error {
 		return server.Run(gCtx)
 	})
+	g.Go(func() error {
+		err = investProvider.Start(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		trades, err := investProvider.SubscribeTrades(
+			ctx,
+			marketdata.TradeSubscription{
+				Tickers: []string{
+					"SBER_TQBR",
+				},
+			},
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		for trade := range trades {
+			fmt.Println(
+				trade.Ticker,
+				trade.Price,
+			)
+		}
+
+		return nil
+	})
 
 	if err = g.Wait(); err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, http.ErrServerClosed) {
 		e := fmt.Errorf("an un-recoverable error occurred, exiting: %w", err)
-		log.Println(e.Error())
+		logger.Error(e.Error())
 		return
 	}
 }
