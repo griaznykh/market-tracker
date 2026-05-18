@@ -14,6 +14,7 @@ import (
 	"market-service/internal/grpc/server"
 	"market-service/internal/grpc/service"
 	"market-service/internal/marketdata"
+	"market-service/internal/marketdata/collector"
 	"market-service/internal/providers/invest"
 	"net/http"
 	"time"
@@ -95,11 +96,11 @@ func main() {
 		return
 	}
 
-	investConfig := invest.ProviderConfig{
+	investConfig := invest.InvestProviderConfig{
 		Token: config.INVEST_API_TOKEN,
 	}
 
-	investProvider, err := invest.NewProvider(
+	investProvider, err := invest.NewInvestProvider(
 		ctx,
 		investConfig,
 		logger.Sugar(),
@@ -111,38 +112,26 @@ func main() {
 		return
 	}
 
-	defer investProvider.Close()
+	collectorConfig := collector.Config{
+		Logger: logger,
+		Providers: map[string]marketdata.MarketDataProvider{
+			"tbank": investProvider,
+		},
+	}
+
+	mdCollector, err := collector.New(collectorConfig)
+	if err != nil {
+		e := fmt.Errorf("init market data collector err: %w", err)
+		logger.Error(e.Error())
+		return
+	}
 
 	g, gCtx := errgroup.WithContext(ctx)
 	g.Go(func() error {
 		return server.Run(gCtx)
 	})
 	g.Go(func() error {
-		err = investProvider.Start(ctx)
-		if err != nil {
-			panic(err)
-		}
-
-		trades, err := investProvider.SubscribeTrades(
-			ctx,
-			marketdata.TradeSubscription{
-				Tickers: []string{
-					"SBER_TQBR",
-				},
-			},
-		)
-		if err != nil {
-			panic(err)
-		}
-
-		for trade := range trades {
-			fmt.Println(
-				trade.Ticker,
-				trade.Price,
-			)
-		}
-
-		return nil
+		return mdCollector.Run(ctx)
 	})
 
 	if err = g.Wait(); err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, http.ErrServerClosed) {

@@ -2,28 +2,35 @@ package marketdata
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
 type (
-	TradeSubscription struct {
-		Tickers []string
+	SubscriptionRequest struct {
+		Provider string
+		Tickers  []string
 	}
 
-	Trade struct {
+	UnsubscriptionRequest struct {
+		Provider string
+	}
+
+	Data struct {
 		Provider string
 		Ticker   string
 		Price    float64
 		Time     time.Time
 	}
 
-	MarketDataProvider interface {
-		Start(ctx context.Context) error
-		Close() error
+	Subscription struct {
+		Channel <-chan Data
+		Cancel  func()
+		Wg      *sync.WaitGroup
+	}
 
-		SubscribeTrades(
-			ctx context.Context,
-			req TradeSubscription,
-		) (<-chan Trade, error)
+	MarketDataProvider interface {
+		Subscribe(ctx context.Context, req SubscriptionRequest) (*Subscription, error)
+		Unsubscribe(s *Subscription)
 	}
 )

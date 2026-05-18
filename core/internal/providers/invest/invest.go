@@ -3,32 +3,29 @@ package invest
 import (
 	"context"
 	"market-service/internal/marketdata"
+	"strings"
 	"sync"
 
 	"go.uber.org/zap"
 	"opensource.tbank.ru/invest/invest-go/investgo"
 )
 
-type Provider struct {
+type InvestProvider struct {
+	logger   *zap.SugaredLogger
 	client   *investgo.Client
-	mdStream *investgo.MarketDataStream
-
-	logger *zap.SugaredLogger
-
-	cancel context.CancelFunc
-	wg     sync.WaitGroup
+	mdClient *investgo.MarketDataStreamClient
 }
 
-type ProviderConfig struct {
+type InvestProviderConfig struct {
 	Token    string
 	Endpoint string
 }
 
-func NewProvider(
+func NewInvestProvider(
 	ctx context.Context,
-	config ProviderConfig,
+	config InvestProviderConfig,
 	logger *zap.SugaredLogger,
-) (*Provider, error) {
+) (*InvestProvider, error) {
 	investConfig := investgo.Config{
 		EndPoint:           config.Endpoint,
 		Token:              config.Token,
@@ -40,88 +37,70 @@ func NewProvider(
 		return nil, err
 	}
 
-	mdClient := client.NewMarketDataStreamClient()
+	MDClient := client.NewMarketDataStreamClient()
 
-	stream, err := mdClient.MarketDataStream()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Provider{
+	return &InvestProvider{
 		client:   client,
-		mdStream: stream,
+		mdClient: MDClient,
 		logger:   logger,
 	}, nil
 }
 
-func (p *Provider) Start(ctx context.Context) error {
-	ctx, cancel := context.WithCancel(ctx)
+func (p *InvestProvider) Subscribe(ctx context.Context, req marketdata.SubscriptionRequest) (*marketdata.Subscription, error) {
+	var wg sync.WaitGroup
 
-	p.cancel = cancel
-
-	p.wg.Add(1)
-
-	go func() {
-		defer p.wg.Done()
-
-		err := p.mdStream.Listen()
-		if err != nil {
-			p.logger.Errorf("market data stream error: %v", err)
-		}
-	}()
-
-	return nil
-}
-
-func (p *Provider) SubscribeTrades(
-	ctx context.Context,
-	req marketdata.TradeSubscription,
-) (<-chan marketdata.Trade, error) {
-
-	src, err := p.mdStream.SubscribeLastPrice(req.Tickers)
+	MDStream, err := p.mdClient.MarketDataStream()
 	if err != nil {
 		return nil, err
 	}
 
-	out := make(chan marketdata.Trade)
+	src, err := MDStream.SubscribeLastPrice(req.Tickers)
+	if err != nil {
+		return nil, err
+	}
 
-	p.wg.Add(1)
+	out := make(chan marketdata.Data)
 
-	go func() {
-		defer p.wg.Done()
+	wg.Go(func() {
+		err := MDStream.Listen()
+		if err != nil {
+			p.logger.Errorf("market data stream error: %v", err)
+		}
+	})
+
+	wg.Go(func() {
 		defer close(out)
 
 		for {
 			select {
 			case <-ctx.Done():
+				p.logger.Infof("stop listening %s channels", strings.Join(req.Tickers, ", "))
 				return
-
-			case trade, ok := <-src:
+			case data, ok := <-src:
 				if !ok {
 					return
 				}
 
-				out <- marketdata.Trade{
+				out <- marketdata.Data{
 					Provider: "tbank",
-					Ticker:   trade.GetTicker(),
-					Price:    trade.GetPrice().ToFloat(),
-					Time:     trade.GetTime().AsTime(),
+					Ticker:   data.GetTicker(),
+					Price:    data.GetPrice().ToFloat(),
+					Time:     data.GetTime().AsTime(),
 				}
 			}
 		}
-	}()
 
-	return out, nil
+	})
+
+	return &marketdata.Subscription{
+		Channel: out,
+		Cancel:  MDStream.Stop,
+		Wg:      &wg,
+	}, nil
 }
 
-func (p *Provider) Close() error {
-	if p.cancel != nil {
-		p.cancel()
-	}
-
-	p.mdStream.Stop()
-
-	p.wg.Wait()
-
-	return p.client.Stop()
+func (p *InvestProvider) Unsubscribe(s *marketdata.Subscription) {
+	s.Cancel()
+	s.Wg.Wait()
+	p.logger.Info("Unsubscribe finish")
 }
