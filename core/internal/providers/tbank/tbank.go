@@ -1,31 +1,33 @@
-package invest
+package tbank
 
 import (
 	"context"
 	"market-service/internal/marketdata"
 	"strings"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 	"opensource.tbank.ru/invest/invest-go/investgo"
 )
 
-type InvestProvider struct {
+type TbankProvider struct {
 	logger   *zap.SugaredLogger
 	client   *investgo.Client
 	mdClient *investgo.MarketDataStreamClient
+	mdStream *investgo.MarketDataStream
 }
 
-type InvestProviderConfig struct {
+type TbankProviderConfig struct {
 	Token    string
 	Endpoint string
 }
 
-func NewInvestProvider(
+func NewTbankProvider(
 	ctx context.Context,
-	config InvestProviderConfig,
+	config TbankProviderConfig,
 	logger *zap.SugaredLogger,
-) (*InvestProvider, error) {
+) (*TbankProvider, error) {
 	investConfig := investgo.Config{
 		EndPoint:           config.Endpoint,
 		Token:              config.Token,
@@ -39,27 +41,39 @@ func NewInvestProvider(
 
 	MDClient := client.NewMarketDataStreamClient()
 
-	return &InvestProvider{
+	return &TbankProvider{
+		logger:   logger,
 		client:   client,
 		mdClient: MDClient,
-		logger:   logger,
 	}, nil
 }
 
-func (p *InvestProvider) Subscribe(ctx context.Context, req marketdata.SubscriptionRequest) (*marketdata.Subscription, error) {
+func (p *TbankProvider) Subscribe(ctx context.Context, req marketdata.SubscriptionRequest) (*marketdata.Subscription, error) {
+	p.logger.Infof("Subscribe called for tickers: %v", req.Tickers)
+
+	ctx, cancel := context.WithCancel(ctx)
+
 	var wg sync.WaitGroup
 
 	MDStream, err := p.mdClient.MarketDataStream()
 	if err != nil {
+		cancel()
 		return nil, err
 	}
 
 	src, err := MDStream.SubscribeLastPrice(req.Tickers)
 	if err != nil {
+		cancel()
 		return nil, err
 	}
 
 	out := make(chan marketdata.Data)
+	finished := make(chan struct{})
+
+	wg.Go(func() {
+		<-ctx.Done()
+		MDStream.Stop()
+	})
 
 	wg.Go(func() {
 		err := MDStream.Listen()
@@ -81,6 +95,13 @@ func (p *InvestProvider) Subscribe(ctx context.Context, req marketdata.Subscript
 					return
 				}
 
+				p.logger.Infof(
+					"ticker=%s price=%f time=%v",
+					data.GetTicker(),
+					data.GetPrice().ToFloat(),
+					data.GetTime().AsTime(),
+				)
+
 				out <- marketdata.Data{
 					Provider: "tbank",
 					Ticker:   data.GetTicker(),
@@ -92,15 +113,28 @@ func (p *InvestProvider) Subscribe(ctx context.Context, req marketdata.Subscript
 
 	})
 
-	return &marketdata.Subscription{
-		Channel: out,
-		Cancel:  MDStream.Stop,
-		Wg:      &wg,
-	}, nil
-}
+	go func() {
+		wg.Wait()
+		close(finished)
+	}()
 
-func (p *InvestProvider) Unsubscribe(s *marketdata.Subscription) {
-	s.Cancel()
-	s.Wg.Wait()
-	p.logger.Info("Unsubscribe finish")
+	cancelFunc := func() {
+		cancel()
+
+		select {
+		case <-finished:
+			p.logger.Infof(
+				"subscription closed: %s",
+				strings.Join(req.Tickers, ", "),
+			)
+
+		case <-time.After(5 * time.Second):
+			p.logger.Warnf(
+				"timeout waiting subscription shutdown: %s",
+				strings.Join(req.Tickers, ", "),
+			)
+		}
+	}
+
+	return marketdata.NewSubscription(out, cancelFunc), nil
 }

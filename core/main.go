@@ -15,7 +15,7 @@ import (
 	"market-service/internal/grpc/service"
 	"market-service/internal/marketdata"
 	"market-service/internal/marketdata/collector"
-	"market-service/internal/providers/invest"
+	"market-service/internal/providers/tbank"
 	"net/http"
 	"time"
 
@@ -96,18 +96,18 @@ func main() {
 		return
 	}
 
-	investConfig := invest.InvestProviderConfig{
+	investConfig := tbank.TbankProviderConfig{
 		Token: config.INVEST_API_TOKEN,
 	}
 
-	investProvider, err := invest.NewInvestProvider(
+	investProvider, err := tbank.NewTbankProvider(
 		ctx,
 		investConfig,
 		logger.Sugar(),
 	)
 
 	if err != nil {
-		e := fmt.Errorf("init invest provider err: %w", err)
+		e := fmt.Errorf("init tbank provider err: %w", err)
 		logger.Error(e.Error())
 		return
 	}
@@ -116,6 +116,9 @@ func main() {
 		Logger: logger,
 		Providers: map[string]marketdata.MarketDataProvider{
 			"tbank": investProvider,
+		},
+		Tasks: []collector.Task{
+			{Provider: "tbank", Tickers: config.TICKERS},
 		},
 	}
 
