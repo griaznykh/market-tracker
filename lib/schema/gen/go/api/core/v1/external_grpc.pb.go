@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CoreService_Register_FullMethodName       = "/api.core.v1.CoreService/Register"
-	CoreService_CreateApiToken_FullMethodName = "/api.core.v1.CoreService/CreateApiToken"
-	CoreService_GetCandles_FullMethodName     = "/api.core.v1.CoreService/GetCandles"
+	CoreService_Register_FullMethodName          = "/api.core.v1.CoreService/Register"
+	CoreService_CreateApiToken_FullMethodName    = "/api.core.v1.CoreService/CreateApiToken"
+	CoreService_GetCandles_FullMethodName        = "/api.core.v1.CoreService/GetCandles"
+	CoreService_SubscribeOnEvents_FullMethodName = "/api.core.v1.CoreService/SubscribeOnEvents"
 )
 
 // CoreServiceClient is the client API for CoreService service.
@@ -31,6 +32,7 @@ type CoreServiceClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	CreateApiToken(ctx context.Context, in *CreateApiTokenRequest, opts ...grpc.CallOption) (*CreateApiTokenResponse, error)
 	GetCandles(ctx context.Context, in *GetCandlesRequest, opts ...grpc.CallOption) (*GetCandlesResponse, error)
+	SubscribeOnEvents(ctx context.Context, in *SubscribeOnEventsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SubscribeOnEventsResponse], error)
 }
 
 type coreServiceClient struct {
@@ -71,6 +73,25 @@ func (c *coreServiceClient) GetCandles(ctx context.Context, in *GetCandlesReques
 	return out, nil
 }
 
+func (c *coreServiceClient) SubscribeOnEvents(ctx context.Context, in *SubscribeOnEventsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SubscribeOnEventsResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &CoreService_ServiceDesc.Streams[0], CoreService_SubscribeOnEvents_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[SubscribeOnEventsRequest, SubscribeOnEventsResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type CoreService_SubscribeOnEventsClient = grpc.ServerStreamingClient[SubscribeOnEventsResponse]
+
 // CoreServiceServer is the server API for CoreService service.
 // All implementations must embed UnimplementedCoreServiceServer
 // for forward compatibility.
@@ -78,6 +99,7 @@ type CoreServiceServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	CreateApiToken(context.Context, *CreateApiTokenRequest) (*CreateApiTokenResponse, error)
 	GetCandles(context.Context, *GetCandlesRequest) (*GetCandlesResponse, error)
+	SubscribeOnEvents(*SubscribeOnEventsRequest, grpc.ServerStreamingServer[SubscribeOnEventsResponse]) error
 	mustEmbedUnimplementedCoreServiceServer()
 }
 
@@ -96,6 +118,9 @@ func (UnimplementedCoreServiceServer) CreateApiToken(context.Context, *CreateApi
 }
 func (UnimplementedCoreServiceServer) GetCandles(context.Context, *GetCandlesRequest) (*GetCandlesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCandles not implemented")
+}
+func (UnimplementedCoreServiceServer) SubscribeOnEvents(*SubscribeOnEventsRequest, grpc.ServerStreamingServer[SubscribeOnEventsResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method SubscribeOnEvents not implemented")
 }
 func (UnimplementedCoreServiceServer) mustEmbedUnimplementedCoreServiceServer() {}
 func (UnimplementedCoreServiceServer) testEmbeddedByValue()                     {}
@@ -172,6 +197,17 @@ func _CoreService_GetCandles_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CoreService_SubscribeOnEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(SubscribeOnEventsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CoreServiceServer).SubscribeOnEvents(m, &grpc.GenericServerStream[SubscribeOnEventsRequest, SubscribeOnEventsResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type CoreService_SubscribeOnEventsServer = grpc.ServerStreamingServer[SubscribeOnEventsResponse]
+
 // CoreService_ServiceDesc is the grpc.ServiceDesc for CoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -192,6 +228,12 @@ var CoreService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CoreService_GetCandles_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "SubscribeOnEvents",
+			Handler:       _CoreService_SubscribeOnEvents_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "api/core/v1/external.proto",
 }

@@ -171,33 +171,40 @@ func (server *Server) Run(ctx context.Context) error {
 	return g.Wait()
 }
 
-func getGRPCServer(inOpts []grpc.ServerOption, inInterceptors ...grpc.UnaryServerInterceptor) *grpc.Server {
+func getGRPCServer(inOpts []grpc.ServerOption, inUnaryInterceptors ...grpc.UnaryServerInterceptor) *grpc.Server {
 	validator, err := protovalidate.New()
 	if err != nil {
 		panic(fmt.Errorf("initialize protovalidate: %w", err))
 	}
 
-	interceptors := []grpc.UnaryServerInterceptor{
+	unaryInterceptors := []grpc.UnaryServerInterceptor{
 		grpc_recovery.UnaryServerInterceptor(),
 		grpc_timeout.UnaryServerInterceptor(30 * time.Second),
 	}
 
 	// external middleware
-	interceptors = append(
-		interceptors,
-		inInterceptors...,
+	unaryInterceptors = append(
+		unaryInterceptors,
+		inUnaryInterceptors...,
 	)
 
-	interceptors = append(
-		interceptors,
+	unaryInterceptors = append(
+		unaryInterceptors,
 		grpc_protovalidate.UnaryServerInterceptor(
 			validator,
 		),
 	)
 
+	streamInterceptors := []grpc.StreamServerInterceptor{
+		grpc_recovery.StreamServerInterceptor(),
+	}
+
 	srvOpts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
-			interceptors...,
+			unaryInterceptors...,
+		),
+		grpc.ChainStreamInterceptor(
+			streamInterceptors...,
 		),
 	}
 

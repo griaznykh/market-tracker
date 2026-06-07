@@ -63,39 +63,6 @@ func main() {
 		return
 	}
 
-	// 10 request per minute allowed for auth guard api
-	rateLimitManager := ratelimiter.NewRateLimiterManager(ctx, 10, time.Second*300, time.Second*60)
-	jwtManager := auth.NewJwtManager(config.JWT_SECRET, config.JWT_DURATION)
-
-	externalService, err := service.NewExternalService(&service.ExternalServiceConfig{
-		DB:         dbClient,
-		JwtManager: jwtManager,
-	})
-
-	if err != nil {
-		e := fmt.Errorf("init external gRPC service: %w", err)
-		logger.Error(e.Error())
-		return
-	}
-
-	serverConfig := server.Config{
-		Logger: logger,
-		GRPC:   &server.GRPCServer{Port: config.GRPC_PORT, ReflectionEnabled: config.GRPC_REFLECTION},
-		HTTP:   &server.HTTPServer{Port: config.HTTP_PORT},
-		Services: []grpcx.SelfRegisteringService{
-			externalService,
-		},
-		JwtManager:         jwtManager,
-		RateLimiterManager: rateLimitManager,
-	}
-
-	server, err := server.New(serverConfig)
-	if err != nil {
-		e := fmt.Errorf("init gRPC server: %w", err)
-		logger.Error(e.Error())
-		return
-	}
-
 	investConfig := tbank.TbankProviderConfig{
 		Token: config.INVEST_API_TOKEN,
 	}
@@ -125,6 +92,40 @@ func main() {
 	mdCollector, err := collector.New(collectorConfig)
 	if err != nil {
 		e := fmt.Errorf("init market data collector err: %w", err)
+		logger.Error(e.Error())
+		return
+	}
+
+	// 10 request per minute allowed for auth guard api
+	rateLimitManager := ratelimiter.NewRateLimiterManager(ctx, 10, time.Second*300, time.Second*60)
+	jwtManager := auth.NewJwtManager(config.JWT_SECRET, config.JWT_DURATION)
+
+	externalService, err := service.NewExternalService(&service.ExternalServiceConfig{
+		DB:         dbClient,
+		Collector:  mdCollector,
+		JwtManager: jwtManager,
+	})
+
+	if err != nil {
+		e := fmt.Errorf("init external gRPC service: %w", err)
+		logger.Error(e.Error())
+		return
+	}
+
+	serverConfig := server.Config{
+		Logger: logger,
+		GRPC:   &server.GRPCServer{Port: config.GRPC_PORT, ReflectionEnabled: config.GRPC_REFLECTION},
+		HTTP:   &server.HTTPServer{Port: config.HTTP_PORT},
+		Services: []grpcx.SelfRegisteringService{
+			externalService,
+		},
+		JwtManager:         jwtManager,
+		RateLimiterManager: rateLimitManager,
+	}
+
+	server, err := server.New(serverConfig)
+	if err != nil {
+		e := fmt.Errorf("init gRPC server: %w", err)
 		logger.Error(e.Error())
 		return
 	}

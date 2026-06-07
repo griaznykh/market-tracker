@@ -140,6 +140,34 @@ func local_request_CoreService_GetCandles_0(ctx context.Context, marshaler runti
 	return msg, metadata, err
 }
 
+var filter_CoreService_SubscribeOnEvents_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_CoreService_SubscribeOnEvents_0(ctx context.Context, marshaler runtime.Marshaler, client CoreServiceClient, req *http.Request, pathParams map[string]string) (CoreService_SubscribeOnEventsClient, runtime.ServerMetadata, error) {
+	var (
+		protoReq SubscribeOnEventsRequest
+		metadata runtime.ServerMetadata
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_CoreService_SubscribeOnEvents_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	stream, err := client.SubscribeOnEvents(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+}
+
 // RegisterCoreServiceHandlerServer registers the http handlers for service CoreService to "mux".
 // UnaryRPC     :call CoreServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -205,6 +233,13 @@ func RegisterCoreServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 		forward_CoreService_GetCandles_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+
+	mux.Handle(http.MethodGet, pattern_CoreService_SubscribeOnEvents_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
 	})
 
 	return nil
@@ -297,17 +332,36 @@ func RegisterCoreServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_CoreService_GetCandles_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_CoreService_SubscribeOnEvents_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/api.core.v1.CoreService/SubscribeOnEvents", runtime.WithHTTPPathPattern("/events"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_CoreService_SubscribeOnEvents_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_CoreService_SubscribeOnEvents_0(annotatedContext, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
 var (
-	pattern_CoreService_Register_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"register"}, ""))
-	pattern_CoreService_CreateApiToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"create-token"}, ""))
-	pattern_CoreService_GetCandles_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"get-candles"}, ""))
+	pattern_CoreService_Register_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"register"}, ""))
+	pattern_CoreService_CreateApiToken_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"create-token"}, ""))
+	pattern_CoreService_GetCandles_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"get-candles"}, ""))
+	pattern_CoreService_SubscribeOnEvents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"events"}, ""))
 )
 
 var (
-	forward_CoreService_Register_0       = runtime.ForwardResponseMessage
-	forward_CoreService_CreateApiToken_0 = runtime.ForwardResponseMessage
-	forward_CoreService_GetCandles_0     = runtime.ForwardResponseMessage
+	forward_CoreService_Register_0          = runtime.ForwardResponseMessage
+	forward_CoreService_CreateApiToken_0    = runtime.ForwardResponseMessage
+	forward_CoreService_GetCandles_0        = runtime.ForwardResponseMessage
+	forward_CoreService_SubscribeOnEvents_0 = runtime.ForwardResponseStream
 )

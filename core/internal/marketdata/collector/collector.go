@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"market-service/internal/marketdata"
 	"market-service/internal/marketdata/broker"
+	"sync"
 
 	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
 )
 
 type (
@@ -24,10 +24,12 @@ type (
 	}
 
 	MarketDataCollector struct {
-		logger    *zap.Logger
-		providers map[string]marketdata.MarketDataProvider
-		tasks     []Task
-		broker    *broker.Broker
+		mu            sync.RWMutex
+		logger        *zap.Logger
+		providers     map[string]marketdata.MarketDataProvider
+		subscriptions map[string]*marketdata.Subscription
+		tasks         []Task
+		broker        *broker.Broker
 	}
 )
 
@@ -52,63 +54,119 @@ func New(config Config) (*MarketDataCollector, error) {
 	broker := broker.NewBroker()
 
 	return &MarketDataCollector{
-		logger:    config.Logger,
-		providers: config.Providers,
-		tasks:     config.Tasks,
-		broker:    broker,
+		logger:        config.Logger,
+		providers:     config.Providers,
+		tasks:         config.Tasks,
+		broker:        broker,
+		subscriptions: make(map[string]*marketdata.Subscription),
 	}, nil
 }
 
-func (mdc *MarketDataCollector) Run(ctx context.Context) error {
-	g, ctx := errgroup.WithContext(ctx)
-
-	// start tasks
-	for _, task := range mdc.tasks {
-		provider, ok := mdc.providers[task.Provider]
-		if !ok {
-			return fmt.Errorf("get provider error")
-		}
-
+func (c *MarketDataCollector) Run(ctx context.Context) error {
+	for _, task := range c.tasks {
 		for _, ticker := range task.Tickers {
-			subscription, err := provider.Subscribe(
+			ch, err := c.Subscribe(
 				ctx,
-				marketdata.SubscriptionRequest{
-					Tickers: []string{ticker},
-				},
+				task.Provider,
+				ticker,
 			)
 			if err != nil {
-				return fmt.Errorf("subscribe to ticker: %w", err)
+				return err
 			}
 
-			topic := fmt.Sprintf("%s:%s", task.Provider, ticker)
-
-			g.Go(func() error {
-				for trade := range subscription.Channel() {
-					mdc.broker.Publish(topic, trade)
+			go func(ctx context.Context, ch <-chan marketdata.Data) {
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case trade := <-ch:
+						fmt.Println(trade.Ticker, trade.Price)
+					}
 				}
-
-				return nil
-			})
-
-			g.Go(func() error {
-				sub := mdc.broker.Subscribe(topic)
-				for trade := range sub {
-					// TODO save to db
-					fmt.Println(
-						trade.Ticker,
-						trade.Price,
-					)
-				}
-
-				return nil
-			})
-
+			}(ctx, ch)
 		}
 	}
 
+	go func(ctx context.Context) {
+		events := c.broker.Event()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case event := <-events:
+				switch event.Event {
+				case broker.Subscribe:
+					provider, ok := c.providers[event.Provider]
+					if !ok {
+						c.logger.Error("no provider to subscribe error")
+						continue
+					}
+
+					subscription, err := provider.Subscribe(ctx, marketdata.SubscriptionRequest{Tickers: []string{event.Ticker}})
+					if err != nil {
+						c.logger.Error("provider subscription error", zap.Error(err))
+						continue
+					}
+
+					key := fmt.Sprintf("%s:%s", event.Provider, event.Ticker)
+
+					c.mu.Lock()
+					c.subscriptions[key] = subscription
+					c.mu.Unlock()
+
+					go func(sub *marketdata.Subscription) {
+						select {
+						case <-sub.Done():
+							return
+						case data := <-sub.Channel():
+							c.broker.Publish(data)
+						}
+					}(subscription)
+
+				case broker.Unsubscribe:
+					key := fmt.Sprintf("%s:%s", event.Provider, event.Ticker)
+
+					c.mu.Lock()
+					subscription, ok := c.subscriptions[key]
+					if ok {
+						subscription.Close()
+						delete(c.subscriptions, key)
+					}
+					c.mu.Unlock()
+
+					if !ok {
+						c.logger.Error("no subscription to unsubscribe error")
+					}
+				}
+			}
+		}
+	}(ctx)
+
 	<-ctx.Done()
 
-	mdc.broker.Close()
+	c.broker.Close()
 
-	return g.Wait()
+	return nil
+}
+
+func (c *MarketDataCollector) Subscribe(
+	ctx context.Context,
+	provider string,
+	ticker string,
+) (<-chan marketdata.Data, error) {
+	_, ok := c.providers[provider]
+	if !ok {
+		return nil, fmt.Errorf("provider not found")
+	}
+
+	return c.broker.Subscribe(provider, ticker), nil
+}
+
+func (c *MarketDataCollector) Unsubscribe(
+	provider string,
+	ticker string,
+	ch <-chan marketdata.Data,
+) {
+	c.broker.Unsubscribe(provider, ticker, ch)
 }

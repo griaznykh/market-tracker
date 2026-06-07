@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package api.core.v1;
+
+option go_package = "market-tracker/lib/schema/gen/go/api/core/v1;corev1";
+
+message Event {
+  api.core.v1.EventName name = 1;
+
+  api.core.v1.Tick tick = 2;
+}
+
+enum EventName {
+  EVENT_NAME_UNSPECIFIED = 0;
+  EVENT_NAME_KEEP_ALIVE = 1;
+  EVENT_NAME_TICK = 2;
+}
+
+message Tick {
+  string provider = 1;
+  string ticker = 2;
+  double price = 3;
+}

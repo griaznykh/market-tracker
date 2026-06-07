@@ -7,8 +7,7 @@ import (
 
 type (
 	SubscriptionRequest struct {
-		Provider string
-		Tickers  []string
+		Tickers []string
 	}
 
 	Data struct {

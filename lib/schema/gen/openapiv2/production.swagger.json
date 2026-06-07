@@ -44,6 +44,48 @@
         ]
       }
     },
+    "/events": {
+      "get": {
+        "operationId": "SubscribeOnEvents",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/SubscribeOnEventsResponse"
+                },
+                "error": {
+                  "$ref": "#/definitions/Status"
+                }
+              },
+              "title": "Stream result of SubscribeOnEventsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ticker",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    },
     "/get-candles": {
       "get": {
         "operationId": "GetCandles",
@@ -178,6 +220,26 @@
         }
       }
     },
+    "Event": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/EventName"
+        },
+        "tick": {
+          "$ref": "#/definitions/Tick"
+        }
+      }
+    },
+    "EventName": {
+      "type": "string",
+      "enum": [
+        "EVENT_NAME_UNSPECIFIED",
+        "EVENT_NAME_KEEP_ALIVE",
+        "EVENT_NAME_TICK"
+      ],
+      "default": "EVENT_NAME_UNSPECIFIED"
+    },
     "GetCandlesResponse": {
       "type": "object",
       "properties": {
@@ -214,6 +276,29 @@
             "type": "object",
             "$ref": "#/definitions/Any"
           }
+        }
+      }
+    },
+    "SubscribeOnEventsResponse": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "$ref": "#/definitions/Event"
+        }
+      }
+    },
+    "Tick": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "ticker": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number",
+          "format": "double"
         }
       }
     },

@@ -3,6 +3,7 @@ syntax = "proto3";
 package api.core.v1;
 
 import "api/core/v1/candle.proto";
+import "api/core/v1/event.proto";
 import "api/core/v1/token.proto";
 import "api/core/v1/user.proto";
 import "google/api/annotations.proto";
@@ -21,6 +22,10 @@ service CoreService {
 
   rpc GetCandles(GetCandlesRequest) returns (GetCandlesResponse) {
     option (google.api.http) = {get: "/get-candles"};
+  }
+
+  rpc SubscribeOnEvents(SubscribeOnEventsRequest) returns (stream SubscribeOnEventsResponse) {
+    option (google.api.http) = {get: "/events"};
   }
 }
 
@@ -51,4 +56,13 @@ message GetCandlesRequest {
 
 message GetCandlesResponse {
   repeated Candle candles = 1;
+}
+
+message SubscribeOnEventsRequest {
+  string provider = 1;
+  string ticker = 2;
+}
+
+message SubscribeOnEventsResponse {
+  api.core.v1.Event event = 1;
 }

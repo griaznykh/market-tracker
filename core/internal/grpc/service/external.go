@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"market-service/internal/db"
+	"market-service/internal/marketdata/collector"
 
 	"lib/auth"
 	pb "lib/schema/gen/go/api/core/v1"
@@ -17,6 +18,7 @@ type (
 	// ExternalServiceConfig defines ExternalService configuration.
 	ExternalServiceConfig struct {
 		DB         *db.Client
+		Collector  *collector.MarketDataCollector
 		JwtManager auth.JwtManager
 	}
 
@@ -24,6 +26,7 @@ type (
 	ExternalService struct {
 		pb.UnimplementedCoreServiceServer
 		db         *db.Client
+		collector  *collector.MarketDataCollector
 		jwtManager auth.JwtManager
 	}
 )
@@ -31,6 +34,10 @@ type (
 func (c *ExternalServiceConfig) validate() error {
 	if c.DB == nil {
 		return errors.New("database client is nil")
+	}
+
+	if c.Collector == nil {
+		return errors.New("collector is nil")
 	}
 
 	return nil
@@ -43,6 +50,7 @@ func NewExternalService(config *ExternalServiceConfig) (*ExternalService, error)
 
 	return &ExternalService{
 		db:         config.DB,
+		collector:  config.Collector,
 		jwtManager: config.JwtManager,
 	}, nil
 }
